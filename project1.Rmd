@@ -1,0 +1,26 @@
+---
+title: 'TMA4315: Project 1'
+author: "Jim Totland, Martin Gudahl Tufte"
+date: "9/8/2021"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem 1
+## a)
+Since the response variables $y_i \sim \mathrm{Bernoulli}(p)$, the conditional mean is given by $\mathrm{E}y_i = p$, which is connected to the covariates via the following relationship:
+
+$$ 
+x_i^T\beta =: \eta_i = \Phi^{-1}(p),
+$$
+which implies that $p = \Phi(\eta_i)$.This results in the likelihood function
+
+$$
+\begin{split}
+L(\beta) &= \Pi_{i= 1}^n p^{y_i}(1-p)^{1-y_i} \\
+&=\Pi_{i = 1}^n\Phi(\eta_i)^{y_i}(1 - \Phi(\eta_i))^{1-y_i}.
+\end{split}
+$$
