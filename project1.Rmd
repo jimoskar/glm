@@ -24,3 +24,26 @@ L(\beta) &= \Pi_{i= 1}^n p^{y_i}(1-p)^{1-y_i} \\
 &=\Pi_{i = 1}^n\Phi(\eta_i)^{y_i}(1 - \Phi(\eta_i))^{1-y_i}.
 \end{split}
 $$
+Thus, the log-likelyhood becomes
+
+$$
+l(\beta) := \mathrm{ln}(L(\beta)) = \sum_{i = 1}^n y_i \mathrm{ln}(\Phi(\eta_i)) + (1- y_i)\mathrm{ln}(1-\Phi(\eta_i)) = \sum_{i = 1}^nl_i(\beta).
+$$
+To find the score function, we calculate
+
+$$
+\begin{split}
+  \frac{\partial l_i(\beta)}{\partial \beta} &= \frac{y_i}{\Phi(\eta_i)} \frac{\partial
+  \Phi(\eta_i)}{\partial   \beta} - \frac{1-y_i}{1-\Phi(\eta_i)} \frac{\partial \Phi(\eta_i)}{\partial \beta} \\
+  &= \frac{y_i}{\Phi(\eta_i)} \phi(\eta_i)x_i^T - \frac{1-y_i}{1-\Phi(\eta_i)} \phi(\eta_i)x_i^T \\
+  &= \frac{y_i(1-\Phi(\eta_i)) - (1-y_i)\Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i^T \\
+  &= \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i^T
+\end{split} 
+$$
+Consequently, the score function is given by 
+
+$$
+s(\beta ) = \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i^T.
+$$
+
+Next, we find the expected Fisher information.
