@@ -8,10 +8,11 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
+\textcolor{red}{Litt usikker på hva slags notasjon vi skal bruke, f. eks. boldface for vektorer eller ikke? Bare si ifra hvis du vil ha noe spesifikit:)}
 
 # Problem 1
 ## a)
-Since the response variables $y_i \sim \mathrm{Bernoulli}(p)$, the conditional mean is given by $\mathrm{E}y_i = p$, which is connected to the covariates via the following relationship:
+Since the response variables $y_i \overset{\mathrm{iid}}{\sim} \mathrm{Bernoulli}(p)$, the conditional mean is given by $\mathrm{E}y_i = p$, which is connected to the covariates via the following relationship:
 
 $$ 
 x_i^T\beta =: \eta_i = \Phi^{-1}(p),
@@ -35,15 +36,24 @@ $$
 \begin{split}
   \frac{\partial l_i(\beta)}{\partial \beta} &= \frac{y_i}{\Phi(\eta_i)} \frac{\partial
   \Phi(\eta_i)}{\partial   \beta} - \frac{1-y_i}{1-\Phi(\eta_i)} \frac{\partial \Phi(\eta_i)}{\partial \beta} \\
-  &= \frac{y_i}{\Phi(\eta_i)} \phi(\eta_i)x_i^T - \frac{1-y_i}{1-\Phi(\eta_i)} \phi(\eta_i)x_i^T \\
-  &= \frac{y_i(1-\Phi(\eta_i)) - (1-y_i)\Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i^T \\
-  &= \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i^T
+  &= \frac{y_i}{\Phi(\eta_i)} \phi(\eta_i)x_i - \frac{1-y_i}{1-\Phi(\eta_i)} \phi(\eta_i)x_i \\
+  &= \frac{y_i(1-\Phi(\eta_i)) - (1-y_i)\Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i \\
+  &= \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i
 \end{split} 
 $$
 Consequently, the score function is given by 
 
 $$
-s(\beta ) = \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i^T.
+s(\beta ) = \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i.
 $$
 
-Next, we find the expected Fisher information.
+Next, we find the expected Fisher information, $F(\beta)$. We find it by using the result
+
+$$
+\begin{split}
+  F(\beta) &= \mathrm{Var}(s(\beta)) = \mathrm{Var} \left( \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i \right) \\
+  &= \sum_{i = 1}^n \underbrace{\left[ \frac{\phi(\eta_i)}{\Phi(\eta_i(1 - \Phi(\eta_i)))}\right]^2}_{ =: \xi_i} \mathrm{Var}(y_ix_i) = \sum_{i = 1}^n \xi_i x_i^T \mathrm{Var}(y_i) x_i \\
+  &= \sum_{i = 1}^n \xi_i p(1-p) x_i^Tx_i.
+\end{split}
+$$
+ Where in the third equality we have used that the $y_i$'s are independent.
