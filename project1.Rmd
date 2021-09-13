@@ -12,20 +12,20 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Problem 1
 ## a)
-Since the response variables $y_i \overset{\mathrm{iid}}{\sim} \mathrm{Bernoulli}(p)$, the conditional mean is given by $\mathrm{E}y_i = p$, which is connected to the covariates via the following relationship:
+Since the response variables $y_i \sim \mathrm{Bernoulli}(p_i)$, where $p_i = \Pr(y_i=1 \mid x_i) = \Phi(x_i^T \beta)$, the conditional mean is given by $\mathrm{E}y_i = p_i$, which is connected to the covariates via the following relationship:
 
-$$ 
-x_i^T\beta =: \eta_i = \Phi^{-1}(p),
 $$
-which implies that $p = \Phi(\eta_i)$.This results in the likelihood function
+x_i^T\beta =: \eta_i = \Phi^{-1}(p_i),
+$$
+which implies that $p_i = \Phi(\eta_i)$. This results in the likelihood function
 
 $$
 \begin{split}
-L(\beta) &= \Pi_{i= 1}^n p^{y_i}(1-p)^{1-y_i} \\
-&=\Pi_{i = 1}^n\Phi(\eta_i)^{y_i}(1 - \Phi(\eta_i))^{1-y_i}.
+L(\beta) &= \prod_{i= 1}^n p_i^{y_i}(1-p_i)^{1-y_i} \\
+&=\prod_{i = 1}^n\Phi(\eta_i)^{y_i}(1 - \Phi(\eta_i))^{1-y_i}.
 \end{split}
 $$
-Thus, the log-likelyhood becomes
+Thus, the log-likelihood becomes
 
 $$
 l(\beta) := \mathrm{ln}(L(\beta)) = \sum_{i = 1}^n y_i \mathrm{ln}(\Phi(\eta_i)) + (1- y_i)\mathrm{ln}(1-\Phi(\eta_i)) = \sum_{i = 1}^nl_i(\beta).
@@ -52,8 +52,16 @@ Next, we find the expected Fisher information, $F(\beta)$. We find it by using t
 $$
 \begin{split}
   F(\beta) &= \mathrm{Var}(s(\beta)) = \mathrm{Var} \left( \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i \right) \\
-  &= \sum_{i = 1}^n \underbrace{\left[ \frac{\phi(\eta_i)}{\Phi(\eta_i(1 - \Phi(\eta_i)))}\right]^2}_{ =: \xi_i} \mathrm{Var}(y_ix_i) = \sum_{i = 1}^n \xi_i x_i^T \mathrm{Var}(y_i) x_i \\
-  &= \sum_{i = 1}^n \xi_i p(1-p) x_i^Tx_i.
+  &= \sum_{i = 1}^n \underbrace{\left[ \frac{\phi(\eta_i)}{\Phi(\eta_i)(1 - \Phi(\eta_i))}\right]^2}_{ =: \xi_i} \mathrm{Var}(y_ix_i) = \sum_{i = 1}^n \xi_i x_i^T \mathrm{Var}(y_i) x_i \\
+  &= \sum_{i = 1}^n \xi_i p_i(1-p_i) x_i^Tx_i \\
+  &= \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} x_i^Tx_i
 \end{split}
 $$
  Where in the third equality we have used that the $y_i$'s are independent.
+ 
+ 
+ 
+ 
+ 
+ 
+ 
