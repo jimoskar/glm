@@ -8,92 +8,83 @@ output: pdf_document
 ```{r setup, include=FALSE}
 knitr::opts_chunk$set(echo = TRUE)
 ```
-\textcolor{red}{Litt usikker på hva slags notasjon vi skal bruke, f. eks. boldface for vektorer eller ikke? Bare si ifra hvis du vil ha noe spesifikit:)}
 
 # Problem 1
 ## a)
-Since the response variables $y_i \sim \mathrm{Bernoulli}(p_i)$, where $p_i = \Pr(y_i=1 \mid x_i) = \Phi(x_i^T \beta)$, the conditional mean is given by $\mathrm{E}y_i = p_i$, which is connected to the covariates via the following relationship:
+Since the response variables $y_i \sim \mathrm{Bernoulli}(\pi_i)$, where $\pi_i = \Pr(y_i=1 \mid \boldsymbol{x}_i) = \Phi(\boldsymbol{x}_i^T \boldsymbol{\beta})$, the conditional mean is given by $\mathrm{E}y_i = \pi_i$, which is connected to the covariates via the following relationship:
 
 $$
-x_i^T\beta =: \eta_i = \Phi^{-1}(p_i),
+\boldsymbol{x}_i^T\boldsymbol{\beta} =: \eta_i = \Phi^{-1}(\pi_i),
 $$
-which implies that $p_i = \Phi(\eta_i)$. This results in the likelihood function
+which implies that $\pi_i = \Phi(\eta_i)$. This results in the likelihood function
 
 $$
 \begin{split}
-L(\beta) &= \prod_{i= 1}^n p_i^{y_i}(1-p_i)^{1-y_i} \\
+L(\boldsymbol{\beta}) &= \prod_{i= 1}^n \pi_i^{y_i}(1-\pi_i)^{1-y_i} \\
 &=\prod_{i = 1}^n\Phi(\eta_i)^{y_i}(1 - \Phi(\eta_i))^{1-y_i}.
 \end{split}
 $$
 Thus, the log-likelihood becomes
 
 $$
-l(\beta) := \mathrm{ln}(L(\beta)) = \sum_{i = 1}^n y_i \mathrm{ln}(\Phi(\eta_i)) + (1- y_i)\mathrm{ln}(1-\Phi(\eta_i)) = \sum_{i = 1}^nl_i(\beta).
+l(\boldsymbol{\beta}) := \mathrm{ln}(L(\boldsymbol{\beta})) = \sum_{i = 1}^n y_i \mathrm{ln}(\Phi(\eta_i)) + (1- y_i)\mathrm{ln}(1-\Phi(\eta_i)) = \sum_{i = 1}^nl_i(\boldsymbol{\beta}).
 $$
 To find the score function, we calculate
 
 $$
 \begin{split}
-  \frac{\partial l_i(\beta)}{\partial \beta} &= \frac{y_i}{\Phi(\eta_i)} \frac{\partial
-  \Phi(\eta_i)}{\partial   \beta} - \frac{1-y_i}{1-\Phi(\eta_i)} \frac{\partial \Phi(\eta_i)}{\partial \beta} \\
-  &= \frac{y_i}{\Phi(\eta_i)} \phi(\eta_i)x_i - \frac{1-y_i}{1-\Phi(\eta_i)} \phi(\eta_i)x_i \\
-  &= \frac{y_i(1-\Phi(\eta_i)) - (1-y_i)\Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i \\
-  &= \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i.
+  \frac{\partial l_i(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}} &= \frac{y_i}{\Phi(\eta_i)} \frac{\partial
+  \Phi(\eta_i)}{\partial  \boldsymbol{\beta}} - \frac{1-y_i}{1-\Phi(\eta_i)} \frac{\partial \Phi(\eta_i)}{\partial \boldsymbol{\beta}} \\
+  &= \frac{y_i}{\Phi(\eta_i)} \phi(\eta_i)\boldsymbol{x}_i - \frac{1-y_i}{1-\Phi(\eta_i)} \phi(\eta_i)\boldsymbol{x}_i \\
+  &= \frac{y_i(1-\Phi(\eta_i)) - (1-y_i)\Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)\boldsymbol{x}_i \\
+  &= \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)\boldsymbol{x}_i.
 \end{split}
 $$
 Consequently, the score function is given by 
 
 $$
-s(\beta ) = \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i.
+\boldsymbol{s}(\boldsymbol{\beta} ) = \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)\boldsymbol{x}_i.
 $$
 
-Next, we find the expected Fisher information, $F(\beta)$. We find it by using the result
+Next, we find the expected Fisher information, $F(\boldsymbol{\beta})$. We find it by using the result
 
 $$
 \begin{split}
-  F(\beta) &= \mathrm{Var}(s(\beta)) = \mathrm{Var} \left( \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)x_i \right) \\
-  &= \sum_{i = 1}^n \underbrace{\left[ \frac{\phi(\eta_i)}{\Phi(\eta_i)(1 - \Phi(\eta_i))}\right]^2}_{ =: \xi_i} \mathrm{Var}(y_ix_i) = \sum_{i = 1}^n \xi_i x_i \mathrm{Var}(y_i) x_i^T \\
-  &= \sum_{i = 1}^n \xi_i p_i(1-p_i) x_i x_i^T \\
-  &= \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} x_i x_i^T,
+  F(\boldsymbol{\beta}) &= \mathrm{Var}(\boldsymbol{s}(\beta)) = \mathrm{Var} \left( \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)\boldsymbol{x}_i \right) \\
+  &= \sum_{i = 1}^n \left[ \frac{\phi(\eta_i)}{\Phi(\eta_i)(1 - \Phi(\eta_i))}\right]^2 \mathrm{Var}(y_i \boldsymbol{x}_i) = \sum_{i = 1}^n\left[ \frac{\phi(\eta_i)}{\Phi(\eta_i)(1 - \Phi(\eta_i))}\right]^2  \boldsymbol{x}_i \mathrm{Var}(y_i) \boldsymbol{x}_i^T \\
+  &= \sum_{i = 1}^n \left[ \frac{\phi(\eta_i)}{\Phi(\eta_i)(1 - \Phi(\eta_i))}\right]^2  \pi_i(1-\pi_i) \boldsymbol{x}_i \boldsymbol{x}_i^T = \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} \boldsymbol{x}_i \boldsymbol{x}_i^T,
 \end{split}
 $$
 Where in the third equality we have used that the $y_i$'s are independent. The expected Fisher information can also be verified to have this expression by the relationship
 $$
-  F(\beta) = \sum_{i=1}^n \frac{h'(\eta_i)^2}{\mathrm{Var}(y_i)} x_i x_i^T,
+  F(\beta) = \sum_{i=1}^n \frac{h'(\eta_i)^2}{\mathrm{Var}(y_i)} \boldsymbol{x}_i \boldsymbol{x}_i^T,
 $$
-where $h'(\eta_i) = \Phi'(\eta_i) = \phi(\eta_i)$ and $\mathrm{Var}(y_i) = p_i(1-p_i) = \Phi(\eta_i)(1-\Phi(\eta_i))$.
+where $h'(\eta_i) = \Phi'(\eta_i) = \phi(\eta_i)$ and $\mathrm{Var}(y_i) = \pi_i(1-\pi_i) = \Phi(\eta_i)(1-\Phi(\eta_i))$.
 
  
 ## b) The expected Fisher information is given by
 
 $$
-  F(\beta) = \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} x_i x_i^T = x^T W x,
+  F(\beta) = \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} \boldsymbol{x}_i \boldsymbol{x}_i^T = \boldsymbol{x}^T W \boldsymbol{x},
 $$
 where $W = \mathrm{diag}\left(\frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))}\right)$.
 
 The Fisher scoring algorithm states that the next iterate is given by
 
 $$
-  \beta^{(t+1)} = \beta^{(t)} + F(\beta(t))^{-1} s(\beta(t)).
+  \boldsymbol{\beta}^{(t+1)} = \boldsymbol{\beta}^{(t)} + F(\boldsymbol{\beta}^{(t)})^{-1} \boldsymbol{s}(\boldsymbol{\beta}^{(t)}).
 $$
 Inserting the expected Fisher information and the score function we get
 
 $$
-  \beta^{(t+1)} = (x^T W^{(t)} x)^{-1} x^T W^{(t)} \tilde y^{(t)},
+  \boldsymbol{\beta}^{(t+1)} = (\boldsymbol{x}^T W^{(t)} \boldsymbol{x})^{-1} \boldsymbol{x}^T W^{(t)} \tilde{\boldsymbol{y}}^{(t)},
 $$
-where the working response vector $\tilde y^{(t)}$ has element $i$ given by
+where the working response vector $\tilde{\boldsymbol{y}}^{(t)}$ has element $i$ given by
 
 $$
-  \tilde y_i^{(t)} = x_i^T \beta^{(t)} + \frac{y_i - h(x_i^T \beta(t))}{h'(x_i^T \beta(t))} = \eta_i^{(t)} + \frac{y_i - \Phi(\eta_i^{(t)})}{\phi(\eta_i^{(t)})}.
+  \tilde{y}_i^{(t)} = \boldsymbol{x}_i^T \boldsymbol{\beta}^{(t)} + \frac{y_i - h(\boldsymbol{x}_i^T \boldsymbol{\beta}^{(t)})}{h'(\boldsymbol{x}_i^T \boldsymbol{\beta}^{(t)})} = \eta_i^{(t)} + \frac{y_i - \Phi(\eta_i^{(t)})}{\phi(\eta_i^{(t)})}.
 $$
-The deviance is defined as
-
-$$
-  D = -2\ l(\hat \beta) + 2\ l(\text{saturated model})
-$$
-$D = -2\ l(\hat \beta) + 2\ l(\text{sturated model})$.
-
-Implementing myglm in R:
+Implementing `myglm` in R:
 
 ```{r}
 Phi <- function(x) return (pnorm(x))
@@ -149,22 +140,23 @@ myglm <- function(formula, data, start = NULL){
   
   
   # remains to find the coefficients matrix, deviance and estimated variance matrix
-  F.inv <- solve(A)
   
-  Estimate <- beta
-  Std.Error <- sqrt(diag(F.inv))
+  coeff <- 1
+  deviance <- 1
+  vcov <- 1
   
-  return (list("coefficients" = data.frame(Estimate, Std.Error),
-               "deviance" = NULL,
-               "vcov" = F.inv)
-          )
+  return (beta)
 }
+
+#beta <- myglm(menarche ~ age, juul.girl)
+
+#beta
+
+#X <- model.matrix(menarche ~ age, juul.girl)
 
 ```
 
 ## c)
-
-Simulation of 1000 bernoulli draws with a random probability.
 
 ```{r}
 
@@ -178,31 +170,28 @@ df <- data.frame(y, x)
 
 
 ### fit using glm
-model <- glm(y ~ x, family = binomial(link = "probit"), data = df)
+model <- glm(y ~ poly(x,2), family = binomial(link = "probit"), data = df)
 
 # beta
 model$coefficients
-
-# se for beta
-summary(model)
 
 # vcov
 vcov(model)
 
 # deviance
-model$deviance
+# ...
 
 ### fit using myglm
-mymodel <- myglm(y ~ x, data = df)
+beta <- myglm(y ~ poly(x,2), data = df)
 
 # beta
-mymodel$coefficients
+t(beta)
 
 # vcov
-mymodel$vcov
+# ...
 
 # deviance
-mymodel$deviance
+# ...
 
 ```
 
@@ -252,6 +241,6 @@ $$
 $$
 This, in turn, gives
 $$
-\Phi^{-1}(pi_i) = -\frac{\mu}{\sigma} + \frac{1}{\sigma}t_i = \beta_0 + \beta_1t_i,
+\Phi^{-1}(\pi_i) = -\frac{\mu}{\sigma} + \frac{1}{\sigma}t_i = \beta_0 + \beta_1t_i,
 $$
 where $\beta_0 = -\mu/\sigma$ and $\beta_1 = 1/\sigma$.
