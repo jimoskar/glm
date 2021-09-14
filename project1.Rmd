@@ -57,7 +57,7 @@ $$
   &= \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} x_i x_i^T,
 \end{split}
 $$
-Where in the third equality we have used that the $y_i$'s are independent. The expected Fisher information can also be verified by the relationship
+Where in the third equality we have used that the $y_i$'s are independent. The expected Fisher information can also be verified to have this expression by the relationship
 $$
   F(\beta) = \sum_{i=1}^n \frac{h'(\eta_i)^2}{\mathrm{Var}(y_i)} x_i x_i^T,
 $$
@@ -86,16 +86,13 @@ where the working response vector $\tilde y^{(t)}$ has element $i$ given by
 $$
   \tilde y_i^{(t)} = x_i^T \beta^{(t)} + \frac{y_i - h(x_i^T \beta(t))}{h'(x_i^T \beta(t))} = \eta_i^{(t)} + \frac{y_i - \Phi(\eta_i^{(t)})}{\phi(\eta_i^{(t)})}.
 $$
-
+Implementing myglm in R:
 
 ```{r}
-attach(juul.girl)
-
 Phi <- function(x) return (pnorm(x))
 phi <- function(x) return (dnorm(x))
 
 
-# Function using the Fisher scoring algorithm
 myglm <- function(formula, data, start = NULL){
   
   # response variable
@@ -128,7 +125,7 @@ myglm <- function(formula, data, start = NULL){
     # calculate eta, y tilde, W
     eta <- X %*% beta
     y.tilde <- eta + (y - Phi(eta)) / (phi(eta))
-    W <- diag( as.vector(phi(eta)^2 / (Phi(eta)*(1-Phi(eta)))), n, n)
+    W <- diag( as.vector(phi(eta)^2 / (Phi(eta)*(1-Phi(eta)))), n, n )
     
     
     # update beta
@@ -150,7 +147,7 @@ myglm <- function(formula, data, start = NULL){
   deviance <- 1
   vcov <- 1
   
-  return (beta.new)
+  return (beta)
 }
 
 beta <- myglm(menarche ~ age, juul.girl)
@@ -160,6 +157,47 @@ beta
 #X <- model.matrix(menarche ~ age, juul.girl)
 
 ```
+
+## c)
+
+```{r}
+
+# probability
+x = runif(1000, 0, 1)
+# draw n bernoulli with prob x
+y <- rbinom(1000, 1, x)
+
+df <- data.frame(y, x)
+
+
+
+### fit using glm
+model <- glm(y ~ poly(x,2), family = binomial(link = "probit"), data = df)
+
+# beta
+model$coefficients
+
+# vcov
+vcov(model)
+
+# deviance
+# ...
+
+### fit using myglm
+beta <- myglm(y ~ poly(x,2), data = df)
+
+# beta
+t(beta)
+
+# vcov
+# ...
+
+# deviance
+# ...
+
+```
+
+
 
 
  
