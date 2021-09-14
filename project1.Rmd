@@ -224,6 +224,34 @@ juul.girl <- subset(juul, age>8 & age<20 & complete.cases(menarche))
  
  
 ```{r}
-#model <- glm(menarche ~ age, family=familytype(link="probit"), data= juul.girl)
+?juul
+head(juul.girl)
+model <- glm(menarche ~ age, family=binomial(link="probit"), data= juul.girl)
+anova(model, test = "Chisq")
 ```
 
+The low p-value suggests that age has an effect on the response variable.
+
+## b)
+Relating to the `juul` data set, we define for each observation/individual
+
+$$
+y_i = 
+\begin{cases}
+  0, \text{  if menarche has occured.} \\
+  1, \text{  if menarche has not occured.}
+\end{cases}
+$$
+and $t_i$ as the age at the time of examination, which corresponds to `age` in the data set. Let $T_i \sim N(\mu, \sigma)$, where $T_i$ is the time until menarche occurs for the $i$'th individual. Furthermore, let
+
+$$
+\begin{split}
+\pi_i &:= P(y_i = 1) = P(T_i \le t_i) \\
+&= P\left(\frac{T_i -\mu}{\sigma} \le \frac{t_i - \mu}{\sigma}\right) = \Phi\left(\frac{t_i - \mu}{\sigma}\right)
+\end{split}
+$$
+This, in turn, gives
+$$
+\Phi^{-1}(pi_i) = -\frac{\mu}{\sigma} + \frac{1}{\sigma}t_i = \beta_0 + \beta_1t_i,
+$$
+where $\beta_0 = -\mu/\sigma$ and $\beta_1 = 1/\sigma$.
