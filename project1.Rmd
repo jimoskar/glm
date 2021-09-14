@@ -150,9 +150,9 @@ myglm <- function(formula, data, start = NULL){
   return (beta)
 }
 
-beta <- myglm(menarche ~ age, juul.girl)
+#beta <- myglm(menarche ~ age, juul.girl)
 
-beta
+#beta
 
 #X <- model.matrix(menarche ~ age, juul.girl)
 
@@ -215,6 +215,6 @@ juul.girl <- subset(juul, age>8 & age<20 & complete.cases(menarche))
  
  
 ```{r}
-model <- glm(menarche ~ age, family=familytype(link="probit"), data= juul.girl)
+#model <- glm(menarche ~ age, family=familytype(link="probit"), data= juul.girl)
 ```
 
