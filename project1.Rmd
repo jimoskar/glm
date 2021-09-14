@@ -86,6 +86,13 @@ where the working response vector $\tilde y^{(t)}$ has element $i$ given by
 $$
   \tilde y_i^{(t)} = x_i^T \beta^{(t)} + \frac{y_i - h(x_i^T \beta(t))}{h'(x_i^T \beta(t))} = \eta_i^{(t)} + \frac{y_i - \Phi(\eta_i^{(t)})}{\phi(\eta_i^{(t)})}.
 $$
+The deviance is defined as
+
+$$
+  D = -2\ l(\hat \beta) + 2\ l(\text{saturated model})
+$$
+$D = -2\ l(\hat \beta) + 2\ l(\text{sturated model})$.
+
 Implementing myglm in R:
 
 ```{r}
@@ -142,23 +149,22 @@ myglm <- function(formula, data, start = NULL){
   
   
   # remains to find the coefficients matrix, deviance and estimated variance matrix
+  F.inv <- solve(A)
   
-  coeff <- 1
-  deviance <- 1
-  vcov <- 1
+  Estimate <- beta
+  Std.Error <- sqrt(diag(F.inv))
   
-  return (beta)
+  return (list("coefficients" = data.frame(Estimate, Std.Error),
+               "deviance" = NULL,
+               "vcov" = F.inv)
+          )
 }
-
-#beta <- myglm(menarche ~ age, juul.girl)
-
-#beta
-
-#X <- model.matrix(menarche ~ age, juul.girl)
 
 ```
 
 ## c)
+
+Simulation of 1000 bernoulli draws with a random probability.
 
 ```{r}
 
@@ -172,28 +178,31 @@ df <- data.frame(y, x)
 
 
 ### fit using glm
-model <- glm(y ~ poly(x,2), family = binomial(link = "probit"), data = df)
+model <- glm(y ~ x, family = binomial(link = "probit"), data = df)
 
 # beta
 model$coefficients
+
+# se for beta
+summary(model)
 
 # vcov
 vcov(model)
 
 # deviance
-# ...
+model$deviance
 
 ### fit using myglm
-beta <- myglm(y ~ poly(x,2), data = df)
+mymodel <- myglm(y ~ x, data = df)
 
 # beta
-t(beta)
+mymodel$coefficients
 
 # vcov
-# ...
+mymodel$vcov
 
 # deviance
-# ...
+mymodel$deviance
 
 ```
 
