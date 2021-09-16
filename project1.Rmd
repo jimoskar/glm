@@ -11,12 +11,12 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Problem 1
 ## a)
-Since the response variables $y_i \sim \mathrm{Bernoulli}(\pi_i)$, where $\pi_i = \Pr(y_i=1 \mid \boldsymbol{x}_i) = \Phi(\boldsymbol{x}_i^T \boldsymbol{\beta})$, the conditional mean is given by $\mathrm{E}y_i = \pi_i$, which is connected to the covariates via the following relationship:
+Since the response variables $y_i \sim \mathrm{Bernoulli}(\pi_i)$, where $\pi_i = \Pr(y_i=1 \mid \boldsymbol{x}_i)$. The conditional mean is given by $\mathrm{E}y_i = \pi_i$, which is connected to the covariates via the following relationship:
 
 $$
 \boldsymbol{x}_i^T\boldsymbol{\beta} =: \eta_i = \Phi^{-1}(\pi_i),
 $$
-which implies that $\pi_i = \Phi(\eta_i)$. This results in the likelihood function
+or equivalently: $\pi_i = \Phi(\eta_i)$. This results in the likelihood function
 
 $$
 \begin{split}
@@ -27,7 +27,7 @@ $$
 Thus, the log-likelihood becomes
 
 $$
-l(\boldsymbol{\beta}) := \mathrm{ln}(L(\boldsymbol{\beta})) = \sum_{i = 1}^n y_i \mathrm{ln}(\Phi(\eta_i)) + (1- y_i)\mathrm{ln}(1-\Phi(\eta_i)) = \sum_{i = 1}^nl_i(\boldsymbol{\beta}).
+l(\boldsymbol{\beta}) := \mathrm{ln}(L(\boldsymbol{\beta})) = \sum_{i = 1}^n \underbrace{y_i \mathrm{ln}(\Phi(\eta_i)) + (1- y_i)\mathrm{ln}(1-\Phi(\eta_i))}_{= l_i(\boldsymbol{\beta})} = \sum_{i = 1}^nl_i(\boldsymbol{\beta}).
 $$
 To find the score function, we calculate
 
@@ -62,7 +62,9 @@ $$
 where $h'(\eta_i) = \Phi'(\eta_i) = \phi(\eta_i)$ and $\mathrm{Var}(y_i) = \pi_i(1-\pi_i) = \Phi(\eta_i)(1-\Phi(\eta_i))$.
 
  
-## b) The expected Fisher information is given by
+## b) 
+
+The expected Fisher information is given by
 
 $$
   F(\beta) = \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} \boldsymbol{x}_i \boldsymbol{x}_i^T = \boldsymbol{x}^T W \boldsymbol{x},
@@ -84,6 +86,12 @@ where the working response vector $\tilde{\boldsymbol{y}}^{(t)}$ has element $i$
 $$
   \tilde{y}_i^{(t)} = \boldsymbol{x}_i^T \boldsymbol{\beta}^{(t)} + \frac{y_i - h(\boldsymbol{x}_i^T \boldsymbol{\beta}^{(t)})}{h'(\boldsymbol{x}_i^T \boldsymbol{\beta}^{(t)})} = \eta_i^{(t)} + \frac{y_i - \Phi(\eta_i^{(t)})}{\phi(\eta_i^{(t)})}.
 $$
+The deviance is defined as
+
+ $$
+   D = -2\ l(\hat \beta) + 2\ l(\text{saturated model}).
+ $$
+ 
 Implementing `myglm` in R:
 
 ```{r}
@@ -136,69 +144,46 @@ myglm <- function(formula, data, start = NULL){
     beta <- beta.new
   }
   
+  Estimate <- beta
+  F.inv <- solve(A)
+  Std.Error <- sqrt(diag(F.inv))
   
-  
-  
-  # remains to find the coefficients matrix, deviance and estimated variance matrix
-  
-  coeff <- 1
-  deviance <- 1
-  vcov <- 1
-  
-  return (beta)
+  return (list("coefficients" = data.frame(Estimate, Std.Error),
+            "deviance" = NULL,
+            "vcov" = F.inv))
 }
-
-#beta <- myglm(menarche ~ age, juul.girl)
-
-#beta
-
-#X <- model.matrix(menarche ~ age, juul.girl)
 
 ```
 
 ## c)
 
-```{r}
+Simulation of 1000 bernoulli draws with a random probability.
 
+```{r}
 # probability
 x = runif(1000, 0, 1)
 # draw n bernoulli with prob x
 y <- rbinom(1000, 1, x)
-
 df <- data.frame(y, x)
-
-
-
 ### fit using glm
-model <- glm(y ~ poly(x,2), family = binomial(link = "probit"), data = df)
-
+model <- glm(y ~ x, family = binomial(link = "probit"), data = df)
 # beta
 model$coefficients
-
+# se for beta
+summary(model)
 # vcov
 vcov(model)
-
 # deviance
-# ...
-
+model$deviance
 ### fit using myglm
-beta <- myglm(y ~ poly(x,2), data = df)
-
+mymodel <- myglm(y ~ x, data = df)
 # beta
-t(beta)
-
+mymodel$coefficients
 # vcov
-# ...
-
+mymodel$vcov
 # deviance
-# ...
-
+mymodel$deviance
 ```
-
-
-
-
- 
  
 # Problem 2
 ## a)
@@ -213,8 +198,6 @@ juul.girl <- subset(juul, age>8 & age<20 & complete.cases(menarche))
  
  
 ```{r}
-?juul
-head(juul.girl)
 model <- glm(menarche ~ age, family=binomial(link="probit"), data= juul.girl)
 anova(model, test = "Chisq")
 ```
