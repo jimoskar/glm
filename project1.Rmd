@@ -86,13 +86,18 @@ where the working response vector $\tilde{\boldsymbol{y}}^{(t)}$ has element $i$
 $$
   \tilde{y}_i^{(t)} = \boldsymbol{x}_i^T \boldsymbol{\beta}^{(t)} + \frac{y_i - h(\boldsymbol{x}_i^T \boldsymbol{\beta}^{(t)})}{h'(\boldsymbol{x}_i^T \boldsymbol{\beta}^{(t)})} = \eta_i^{(t)} + \frac{y_i - \Phi(\eta_i^{(t)})}{\phi(\eta_i^{(t)})}.
 $$
-The deviance is defined as
+\textcolor{red}{litt om deviance her. Litt ullent for meg hva en saturated model er, men dette gir riktig svar i c).}
+We also need the deviance, which is defined as
 
  $$
-   D = -2\ l(\hat \beta) + 2\ l(\text{saturated model}).
+   D = 2( l_{\mathrm{saturated}} - l(\hat{\boldsymbol{\beta}})).
  $$
- 
-Implementing `myglm` in R:
+When we fit a parameter for each data point (which is the case for the saturated model), the result for the Bernoulli distribution is that $\hat{\pi}_i = y_i$. This means that the likelihood function of the saturated model is given by
+
+$$
+L_{\mathrm{saturated}} = \prod_{i = 1}^n \hat{\pi}_i^{y_i}(1-\hat{\pi}_i)^{1-y_i} = \prod_{i = 1}^n y_i^{y_i}(1 + y_i)^{1-y_i} = 1,
+$$
+Where we have used $0^0 = 1$. Consequently, the log-likelihood $l_{\mathrm{saturated}} = \mathrm{ln}(1) =  0$ and the deviance becomes $-2l(\hat{\boldsymbol{\beta}})$. Next follows the Implementation of `myglm` in R:
 
 ```{r}
 Phi <- function(x) return (pnorm(x))
@@ -144,20 +149,24 @@ myglm <- function(formula, data, start = NULL){
     beta <- beta.new
   }
   
-  Estimate <- beta
+  # Calculating vcov and deviance.
   F.inv <- solve(A)
-  Std.Error <- sqrt(diag(F.inv))
+  std.Error <- sqrt(diag(F.inv))
   
-  return (list("coefficients" = data.frame(Estimate, Std.Error),
-            "deviance" = NULL,
+  eta = X %*% beta
+  deviance = -2 * sum(y*log(pnorm(eta)) + (1 - y)*log(1 -pnorm(eta)))
+  
+  return (list("coefficients" = data.frame(beta, std.Error),
+            "deviance" = deviance,
             "vcov" = F.inv))
 }
 
 ```
 
+
 ## c)
 
-Simulation of 1000 bernoulli draws with a random probability.
+Simulation of 1000 Bernoulli draws with a random probability.
 
 ```{r}
 # probability
