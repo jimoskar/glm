@@ -61,7 +61,7 @@ $$
 $$
 where $h'(\eta_i) = \Phi'(\eta_i) = \phi(\eta_i)$ and $\mathrm{Var}(y_i) = \pi_i(1-\pi_i) = \Phi(\eta_i)(1-\Phi(\eta_i))$.
 
- 
+
 ## b) 
 
 The expected Fisher information is given by
@@ -193,7 +193,9 @@ mymodel$vcov
 # deviance
 mymodel$deviance
 ```
- 
+
+
+
 # Problem 2
 ## a)
  
@@ -236,6 +238,53 @@ $$
 \Phi^{-1}(\pi_i) = -\frac{\mu}{\sigma} + \frac{1}{\sigma}t_i = \beta_0 + \beta_1t_i,
 $$
 where $\beta_0 = -\mu/\sigma$ and $\beta_1 = 1/\sigma$.
+
+Let $\mu = \mu(\beta_0,\beta_1)$ and $\sigma = \sigma(\beta_0,\beta_1)$. If $\hat\beta_0$ and $\hat\beta_1$ denotes the MLEs of $\beta_0$ and $\beta_1$, respectively, then $\hat\mu = \mu(\hat\beta_0,\hat\beta_1)$ and $\hat\sigma = \sigma(\hat\beta_0,\hat\beta_1)$ is the MLEs of $\mu$ and $\sigma$. It follows that
+$$
+  \sigma = \frac{1}{\beta_1}, \quad \mu = -\frac{\beta_0}{\beta_1},
+$$
+so the MLEs are
+$$
+  \hat\sigma = \frac{1}{\hat\beta_1}, \quad \hat\mu = -\frac{\hat\beta_0}{\hat\beta_1}.
+$$
+The corresponding standard errors of these estimators can then be calculated using the delta method. A first order Taylor expansion of $\mu(\beta_0,\beta_1)$ gives
+$$
+  \mu(\beta_0,\beta_1) \approx \hat\mu + \frac{\partial \mu}{\partial \beta_0} \left(\beta_0 - \hat\beta_0\right) + \frac{\partial \mu}{\partial \beta_1} \left(\beta_1 - \hat\beta_1\right),
+$$
+so
+$$
+  \begin{split}
+    \text{Var}(\mu) &\approx \left(\frac{\partial \mu}{\partial \beta_0}\right)^2 \text{Var}\left(\beta_0\right) + \left(\frac{\partial \mu}{\partial \beta_1}\right)^2 \text{Var}\left(\beta_1\right) + 2 \left(\frac{\partial \mu}{\partial \beta_0}\right) \left(\frac{\partial \mu}{\partial \beta_1}\right) \text{Cov}\left(\beta_0, \beta_1\right)\\
+    & = \left(-\frac{1}{\beta_1}\right)^2 \text{Var}\left(\beta_0\right) + \left(\frac{\beta_0}{\beta_1^2}\right)^2 \text{Var}\left(\beta_1\right) - \frac{2 \beta_0}{\beta_1^3} \text{Cov}\left(\beta_0, \beta_1\right).\\
+  \end{split}
+$$
+
+A similar derivation for $\sigma$ yields
+$$
+  \begin{split}
+    \text{Var}(\sigma) &\approx \left(\frac{\partial \sigma}{\partial \beta_0}\right)^2 \text{Var}\left(\beta_0\right) + \left(\frac{\partial \sigma}{\partial \beta_1}\right)^2 \text{Var}\left(\beta_1\right) + 2 \left(\frac{\partial \sigma}{\partial \beta_0}\right) \left(\frac{\partial \sigma}{\partial \beta_1}\right) \text{Cov}\left(\beta_0, \beta_1\right)\\
+    & = \left(-\frac{1}{\beta_1^2}\right)^2 \text{Var}\left(\beta_1\right).\\
+  \end{split}
+$$
+
+Thus, the standard error of the MLE estimators are
+$$
+ \widehat{\text{SE}\left(\hat\sigma\right)} = \frac{1}{\hat\beta_1^2}\ \text{SE}(\hat\beta_1), \quad \widehat{\text{SE}(\hat\mu)} = \frac{1}{\hat\beta_1}\sqrt{\text{Var}(\hat\beta_0) + \left(\frac{\hat\beta_0}{\hat\beta_1}\right) \text{Var}(\hat\beta_1)},
+$$
+where it was used (assumed?) that $\text{Cov}(\beta_0, \beta_1) = 0$. In R we find the $\beta$'s and their standard error using the summary-function.
+
+```{r}
+mod.probit <- glm(menarche ~ age, family = binomial(link = 'probit'), data = juul.girl)
+s <- summary(mod.probit)
+df <- s$coefficients
+df
+beta0 <- df[1,1]
+beta1 <- df[1,2]
+se0 <- df[2,1]
+se1 <- df[2,2]
+```
+
+From the readout we get $\hat\beta_0 =$ `r beta0` with a standard error of `r se0` and $\hat\beta_1 =$ `r beta1` with a standard error of `r se1`. Thus $\hat\mu =$ `r -beta0/beta1` and $\hat \sigma =$ `r 1/beta1`. Their standard errors are $\widehat{\text{SE}\left(\hat\sigma\right)} =$ `r 1/beta1^2 * se1` and $\widehat{\text{SE}\left(\hat\mu\right)} =$ `r 1/beta1 * sqrt(se0^2 + (beta0/beta1)*se1^2)`.
 
 
 ## c)
