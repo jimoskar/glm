@@ -55,9 +55,9 @@ $$
   &= \sum_{i = 1}^n \left[ \frac{\phi(\eta_i)}{\Phi(\eta_i)(1 - \Phi(\eta_i))}\right]^2  \pi_i(1-\pi_i) \boldsymbol{x}_i \boldsymbol{x}_i^T = \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} \boldsymbol{x}_i \boldsymbol{x}_i^T,
 \end{split}
 $$
-Where in the third equality we have used that the $y_i$'s are independent. The expected Fisher information can also be verified to have this expression by the relationship
+Where in the third equality we have used that the $y_i$'s are independent. The expected Fisher information can also be verified to have this expression by the general relationship
 $$
-  F(\beta) = \sum_{i=1}^n \frac{h'(\eta_i)^2}{\mathrm{Var}(y_i)} \boldsymbol{x}_i \boldsymbol{x}_i^T,
+  F(\boldsymbol{\beta}) = \sum_{i=1}^n \frac{h'(\eta_i)^2}{\mathrm{Var}(y_i)} \boldsymbol{x}_i \boldsymbol{x}_i^T,
 $$
 where $h'(\eta_i) = \Phi'(\eta_i) = \phi(\eta_i)$ and $\mathrm{Var}(y_i) = \pi_i(1-\pi_i) = \Phi(\eta_i)(1-\Phi(\eta_i))$.
 
@@ -67,7 +67,7 @@ where $h'(\eta_i) = \Phi'(\eta_i) = \phi(\eta_i)$ and $\mathrm{Var}(y_i) = \pi_i
 The expected Fisher information is given by
 
 $$
-  F(\beta) = \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} \boldsymbol{x}_i \boldsymbol{x}_i^T = \boldsymbol{x}^T W \boldsymbol{x},
+  F(\boldsymbol{\beta}) = \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} \boldsymbol{x}_i \boldsymbol{x}_i^T = \boldsymbol{x}^T W \boldsymbol{x},
 $$
 where $W = \mathrm{diag}\left(\frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))}\right)$.
 
@@ -76,7 +76,7 @@ The Fisher scoring algorithm states that the next iterate is given by
 $$
   \boldsymbol{\beta}^{(t+1)} = \boldsymbol{\beta}^{(t)} + F(\boldsymbol{\beta}^{(t)})^{-1} \boldsymbol{s}(\boldsymbol{\beta}^{(t)}).
 $$
-Inserting the expected Fisher information and the score function we get
+Inserting the expected Fisher information and the score function we get \textcolor{red}{Jeg tror det du beskriver under er Iterated Reweighted Least Squares, som er en variant av Fisher Scoring algo. Tror bi kun trenger formelen over for å implementere myglm.}
 
 $$
   \boldsymbol{\beta}^{(t+1)} = (\boldsymbol{x}^T W^{(t)} \boldsymbol{x})^{-1} \boldsymbol{x}^T W^{(t)} \tilde{\boldsymbol{y}}^{(t)},
