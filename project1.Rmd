@@ -223,7 +223,7 @@ y_i =
   1, \text{  if menarche has not occured.}
 \end{cases}
 $$
-and $t_i$ as the age at the time of examination, which corresponds to `age` in the data set. Let $T_i \sim N(\mu, \sigma)$, where $T_i$ is the time until menarche occurs for the $i$'th individual. Furthermore, let
+and $t_i$ as the age at the time of examination, which corresponds to `age` in the data set. Let $T_i \sim \mathcal{N}(\mu, \sigma^2)$, where $T_i$ is the time until menarche occurs for the $i$'th individual. Furthermore, let
 
 $$
 \begin{split}
@@ -260,4 +260,27 @@ f_{T_i}(t_i) &= \frac{\mathrm{d}}{\mathrm{d}t_i}\left(\frac{1}{1 + e^{-\eta_i}}\
 \end{split}
 $$
 
-This is the logistic distribution, with parameters $\mu = -\beta_0/\beta_1$ and $s = 1/\beta_1$, where we have used the parametrization from [\textcolor{blue}{Wikipedia}](https://en.wikipedia.org/wiki/Logistic_distribution). We compute estiamtes of the mean and variance from the estimates of $\beta_0$ and $\beta_1$ in the output above. An estimate of the mean is then given by $\text{E}(T_i) =  -\beta_0/\beta1 \approx$ `r -mod.logit$coefficients[1]/mod.logit$coefficients[2]` and an estimate of the variance is given by $\text{Var}(T_i) = s^2\pi^2/3 = \pi^2/(3\beta_1^2) \approx$ `r pi^2/(3*mod.logit$coefficients[2]^2)`.
+This is the logistic distribution, with parameters $\mu = -\beta_0/\beta_1$ and $s = 1/\beta_1$, where we have used the parametrization from [\textcolor{blue}{Wikipedia}](https://en.wikipedia.org/wiki/Logistic_distribution). We compute estimates of the mean and variance from the estimates of $\beta_0$ and $\beta_1$ in the output above. An estimate of the mean is then given by $\text{E}(T_i) =  -\beta_0/\beta1 \approx$ `r -mod.logit$coefficients[1]/mod.logit$coefficients[2]` and an estimate of the variance is given by $\text{Var}(T_i) = s^2\pi^2/3 = \pi^2/(3\beta_1^2) \approx$ `r pi^2/(3*mod.logit$coefficients[2]^2)`.
+
+## d)
+We now assume that the latent ages follow a log-normal distribution, i.e.
+
+$$
+T_i \sim \mathrm{Lognormal}(\mu, \sigma^2).
+$$
+This is equivalent to stating that $\ln T_i \sim \mathcal{N}(\mu, \sigma^2)$. Now we can follow the same approach as in 2b):
+
+$$
+\begin{split}
+\pi_i &:= \mathrm{Pr}(y_i = 1) = \mathrm{Pr}(T_i \le t_i)  = \mathrm{Pr}(\ln T_i \le \ln t_i)\\
+&= \mathrm{Pr}\left(\frac{\ln T_i -\mu}{\sigma} \le \frac{\ln t_i - \mu}{\sigma}\right) = \Phi\left(\frac{\ln t_i - \mu}{\sigma}\right)
+\end{split}
+$$
+
+This, in turn, gives
+
+$$
+\Phi^{-1}(\pi_i) = -\frac{\mu}{\sigma} + \frac{1}{\sigma}t_i = \beta_0 + \beta_1 \ln t_i,
+$$
+where $\beta_0 = -\mu/\sigma$ and $\beta_1 = 1/\sigma$. Consequently, we fit GLM with a probit link-function and...
+
