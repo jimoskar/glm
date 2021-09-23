@@ -43,10 +43,10 @@ $$
 Consequently, the score function is given by 
 
 $$
-\boldsymbol{s}(\boldsymbol{\beta} ) = \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)\boldsymbol{x}_i.
+\boldsymbol{s}(\boldsymbol{\beta} ) = \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)\boldsymbol{x}_i = X^TD\Sigma^{-1}(\boldsymbol{y} - \boldsymbol{\mu}),
 $$
 
-Next, we find the expected Fisher information, $F(\boldsymbol{\beta})$. We find it by using the result
+where $D = \text{diag}(\phi(\eta_i))$ and $\Sigma = \text{diag}(\text{Var}(y_i)) = \text{diag}(\Phi(\eta_i)(1-\Phi(\eta_i)))$. Next, we find the expected Fisher information, $F(\boldsymbol{\beta})$. We find it by using the result
 
 $$
 \begin{split}
@@ -67,7 +67,7 @@ where $h'(\eta_i) = \Phi'(\eta_i) = \phi(\eta_i)$ and $\mathrm{Var}(y_i) = \pi_i
 The expected Fisher information is given by
 
 $$
-  F(\boldsymbol{\beta}) = \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} \boldsymbol{x}_i \boldsymbol{x}_i^T = \boldsymbol{x}^T W \boldsymbol{x},
+  F(\boldsymbol{\beta}) = \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} \boldsymbol{x}_i \boldsymbol{x}_i^T = X^T W X,
 $$
 where $W = \mathrm{diag}\left(\frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))}\right)$.
 
@@ -76,7 +76,8 @@ The Fisher scoring algorithm states that the next iterate is given by
 $$
   \boldsymbol{\beta}^{(t+1)} = \boldsymbol{\beta}^{(t)} + F(\boldsymbol{\beta}^{(t)})^{-1} \boldsymbol{s}(\boldsymbol{\beta}^{(t)}).
 $$
-Inserting the expected Fisher information and the score function we get \textcolor{red}{Jeg tror det du beskriver under er Iterated Reweighted Least Squares, som er en variant av Fisher Scoring algo. Tror bi kun trenger formelen over for å implementere myglm.}
+<!--
+Inserting the expected Fisher information and the score function we get 
 
 $$
   \boldsymbol{\beta}^{(t+1)} = (\boldsymbol{x}^T W^{(t)} \boldsymbol{x})^{-1} \boldsymbol{x}^T W^{(t)} \tilde{\boldsymbol{y}}^{(t)},
@@ -86,7 +87,8 @@ where the working response vector $\tilde{\boldsymbol{y}}^{(t)}$ has element $i$
 $$
   \tilde{y}_i^{(t)} = \boldsymbol{x}_i^T \boldsymbol{\beta}^{(t)} + \frac{y_i - h(\boldsymbol{x}_i^T \boldsymbol{\beta}^{(t)})}{h'(\boldsymbol{x}_i^T \boldsymbol{\beta}^{(t)})} = \eta_i^{(t)} + \frac{y_i - \Phi(\eta_i^{(t)})}{\phi(\eta_i^{(t)})}.
 $$
-\textcolor{red}{litt om deviance her. Litt ullent for meg hva en saturated model er, men dette gir riktig svar i c).}
+-->
+
 We also need the deviance, which is defined as
 
  $$
@@ -132,6 +134,73 @@ myglm <- function(formula, data, start = NULL){
   iter <- 0
   rel.err <- Inf
   
+  F.inv = NULL
+  eta = NULL
+  
+  while (rel.err > tol & iter < max_iter){
+    # Calculate eta.
+    eta <- X %*% beta
+    
+    # Calculate score.
+    D <- diag(as.vector(phi(eta)), n, n)
+    Sigma <- diag(as.vector(Phi(eta)*(1 - Phi(eta))), n, n)
+    mu.vec <- as.vector(Phi(eta))
+    score = t(X) %*% D %*% solve(Sigma) %*% (y - mu.vec)
+    
+    # Calculate Fisher information and its inverse.
+    W <- diag(as.vector(phi(eta)^2 / (Phi(eta)*(1-Phi(eta)))), n, n)
+    F <- t(X) %*% W %*% X
+    F.inv <- solve(F)
+    
+    # Update beta.
+    beta.new <- beta + F.inv %*% score
+    
+    iter <- iter + 1
+    rel.err <- max(abs(beta.new - beta) / abs(beta.new))
+    beta <- beta.new
+  }
+  
+  # Calculating std.errors and deviance.
+  std.Error <- sqrt(diag(F.inv))
+  deviance = -2 * sum(y*log(pnorm(eta)) + (1 - y)*log(1 -pnorm(eta)))
+  
+  return (list("coefficients" = data.frame(beta, std.Error),
+            "deviance" = deviance,
+            "vcov" = F.inv))
+}
+
+```
+
+```{r echo = F, eval = T}
+# Uses IRWLS
+myglm2 <- function(formula, data, start = NULL){
+  
+  # response variable
+  resp <- all.vars(formula)[1]
+  y <- as.matrix( data[resp] )
+  
+  
+  # model matrix
+  X <- model.matrix(formula, data)
+  n <- dim(X)[1]
+  p <- dim(X)[2]
+  
+  
+  # starting beta
+  if (is.null(start)){
+    beta = rep(0, p)
+  }
+  else {
+    beta = start
+  }
+  
+  
+  # Fisher scoring algorithm
+  max_iter <- 50
+  tol <- 1e-10
+  iter <- 0
+  rel.err <- Inf
+  
   while (rel.err > tol & iter < max_iter){
     # calculate eta, y tilde, W
     eta <- X %*% beta
@@ -149,7 +218,7 @@ myglm <- function(formula, data, start = NULL){
     beta <- beta.new
   }
   
-  # Calculating vcov and deviance.
+  # Calculating std.error and deviance.
   F.inv <- solve(A)
   std.Error <- sqrt(diag(F.inv))
   
@@ -160,7 +229,6 @@ myglm <- function(formula, data, start = NULL){
             "deviance" = deviance,
             "vcov" = F.inv))
 }
-
 ```
 
 
