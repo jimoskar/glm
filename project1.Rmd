@@ -307,17 +307,17 @@ $$
 $$
 where $\beta_0 = -\mu/\sigma$ and $\beta_1 = 1/\sigma$.
 
-Let $\mu = \mu(\beta_0,\beta_1)$ and $\sigma = \sigma(\beta_0,\beta_1)$. If $\hat\beta_0$ and $\hat\beta_1$ denotes the MLEs of $\beta_0$ and $\beta_1$, respectively, then $\hat\mu = \mu(\hat\beta_0,\hat\beta_1)$ and $\hat\sigma = \sigma(\hat\beta_0,\hat\beta_1)$ is the MLEs of $\mu$ and $\sigma$. It follows that
+Let $\mu = \mu(\beta_0,\beta_1)$ and $\sigma = \sigma(\beta_0,\beta_1)$. If $\hat\beta_0$ and $\hat\beta_1$ denotes the MLEs of $\beta_0$ and $\beta_1$, respectively, then $\hat\mu = \mu(\hat\beta_0,\hat\beta_1)$ is the MLE of $\mu$  and $\hat\sigma = \sigma(\hat\beta_0,\hat\beta_1)$ of $\sigma$. It follows that
 $$
   \sigma = \frac{1}{\beta_1}, \quad \mu = -\frac{\beta_0}{\beta_1},
 $$
-so the MLEs are
+Consequently, the MLEs are given as
 $$
   \hat\sigma = \frac{1}{\hat\beta_1}, \quad \hat\mu = -\frac{\hat\beta_0}{\hat\beta_1}.
 $$
-The corresponding standard errors of these estimators can then be calculated using the delta method. A first order Taylor expansion of $\mu(\beta_0,\beta_1)$ gives
+The corresponding standard errors of these estimators can then be estimated using the delta method. A first order Taylor expansion of $\mu(\beta_0,\beta_1)$ gives \textcolor{red}{Kanskje endre til vektornotasjon her?}
 $$
-  \mu(\beta_0,\beta_1) \approx \hat\mu + \frac{\partial \mu}{\partial \beta_0} \left(\beta_0 - \hat\beta_0\right) + \frac{\partial \mu}{\partial \beta_1} \left(\beta_1 - \hat\beta_1\right),
+  \mu(\beta_0,\beta_1) \approx \hat\mu + \frac{\partial \mu}{\partial \beta_0}(\hat{\beta}_0, \hat{\beta}_1) \left(\beta_0 - \hat\beta_0\right) + \frac{\partial \mu}{\partial \beta_1} \left(\beta_1 - \hat\beta_1\right),
 $$
 so
 $$
