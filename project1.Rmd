@@ -313,9 +313,31 @@ $$
 $$
 Consequently, the MLEs are given as
 $$
-  \hat\sigma = \frac{1}{\hat\beta_1}, \quad \hat\mu = -\frac{\hat\beta_0}{\hat\beta_1}.
+  \hat\sigma(\hat\beta_1) = \frac{1}{\hat\beta_1}, \quad \hat\mu(\hat\beta_0, \hat\beta_1) = -\frac{\hat\beta_0}{\hat\beta_1}.
 $$
-The corresponding standard errors of these estimators can then be estimated using the delta method. A first order Taylor expansion of $\mu(\beta_0,\beta_1)$ gives \textcolor{red}{Kanskje endre til vektornotasjon her?}
+The corresponding standard errors of these estimators can then be estimated using the delta method. A first order Taylor expansion of $\hat{\mu}$ gives \textcolor{red}{Legge til mitt forslag under:}
+
+$$
+\hat\mu \approx \hat\mu(\boldsymbol{b}) + \nabla \hat\mu(\boldsymbol{b})(\hat{\boldsymbol{\beta}} - \boldsymbol{b}),
+$$
+where we have used the notation $\hat{\boldsymbol{\beta}} = (\hat{\beta}_0, \hat{\beta_1})^T$ and exoanded around $\hat{\boldsymbol{\beta}} = \boldsymbol{b} = (b_0,b_1)^T$. Next, we take the variance of this linear approximation, such that
+
+$$
+\begin{split}
+\mathrm{Var}(\hat\mu) &\approx \mathrm{Var}\left(\nabla\hat{\mu}(\boldsymbol{b})^T\hat{\boldsymbol{\beta}} \right) \\
+&=  \nabla\hat{\mu}(\boldsymbol{b})^T \mathrm{Var}(\hat{\boldsymbol{\beta}})\nabla\hat{\mu}(\boldsymbol{b}).
+\end{split}
+$$
+Since $\nabla \hat{\mu} = (-1/\hat\beta_1, \hat{\beta}_0 /\hat{\beta_1}^2)^T$, we can calculate the standard error as in the code below
+```{r}
+mod.probit <- glm(menarche ~ age, family = binomial(link = 'probit'), data = juul.girl)
+b <- mod.probit$coefficients
+grad.mu <- c(-1/b[2], b[1]/b[2]^2)
+se.mu <- t(grad.mu) %*% vcov(mod.probit) %*% grad.mu
+se.mu
+```
+\textcolor{red}{et annerledes svar her altså. Hva tenker du ?}
+
 $$
   \mu(\beta_0,\beta_1) \approx \hat\mu + \frac{\partial \mu}{\partial \beta_0}(\hat{\beta}_0, \hat{\beta}_1) \left(\beta_0 - \hat\beta_0\right) + \frac{\partial \mu}{\partial \beta_1} \left(\beta_1 - \hat\beta_1\right),
 $$
@@ -397,7 +419,13 @@ $$
 This, in turn, gives
 
 $$
-\Phi^{-1}(\pi_i) = -\frac{\mu}{\sigma} + \frac{1}{\sigma}t_i = \beta_0 + \beta_1 \ln t_i,
+\Phi^{-1}(\pi_i) = -\frac{\mu}{\sigma} + \frac{1}{\sigma}\ln t_i = \beta_0 + \beta_1 \ln t_i,
 $$
-where $\beta_0 = -\mu/\sigma$ and $\beta_1 = 1/\sigma$. Consequently, we fit GLM with a probit link-function and...
+where $\beta_0 = -\mu/\sigma$ and $\beta_1 = 1/\sigma$. Consequently, we fit GLM with a probit link-function on $\ln t_i$:
 
+```{r}
+mod.lognorm <- glm(menarche ~log(age), family = binomial(link = "probit"), data = juul.girl)
+summary(mod.lognorm)
+```
+
+Exactly as in 2b), 
