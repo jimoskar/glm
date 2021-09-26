@@ -318,7 +318,7 @@ $$
 The corresponding standard errors of these estimators can then be estimated using the delta method. A first order Taylor expansion of $\hat{\mu}$ gives \textcolor{red}{Legge til mitt forslag under:}
 
 $$
-\hat\mu \approx \hat\mu(\boldsymbol{b}) + \nabla \hat\mu(\boldsymbol{b})(\hat{\boldsymbol{\beta}} - \boldsymbol{b}),
+\hat\mu \approx \hat\mu(\boldsymbol{b}) + \nabla \hat\mu(\boldsymbol{b})^T(\hat{\boldsymbol{\beta}} - \boldsymbol{b}),
 $$
 where we have used the notation $\hat{\boldsymbol{\beta}} = (\hat{\beta}_0, \hat{\beta_1})^T$ and exoanded around $\hat{\boldsymbol{\beta}} = \boldsymbol{b} = (b_0,b_1)^T$. Next, we take the variance of this linear approximation, such that
 
@@ -425,7 +425,20 @@ where $\beta_0 = -\mu/\sigma$ and $\beta_1 = 1/\sigma$. Consequently, we fit GLM
 
 ```{r}
 mod.lognorm <- glm(menarche ~log(age), family = binomial(link = "probit"), data = juul.girl)
+mu.hat <- -mod.lognorm$coefficients[1]/mod.lognorm$coefficients[2]
+sigma.hat <- 1/mod.lognorm$coefficients[2]
 summary(mod.lognorm)
 ```
 
-Exactly as in 2b), 
+Exactly as in 2b), due to the functional invariance of MLEs, we can estimate the mean of $T_i$ as 
+$$
+\exp\left(\hat{\mu}+ \frac{\hat{\sigma}^2}{2} \right) = \text{`r exp(mu.hat + sigma.hat^2/2)`},
+$$
+
+and we can estimate the standard deviation as 
+
+$$
+\sqrt{[\exp(\hat{\sigma}^2) - 1]\exp(2\hat{\mu} + \hat{\sigma}^2) }= \text{`r sqrt((exp(sigma.hat^2) - 1) * (2*mu.hat + sigma.hat^2))`}.
+$$
+
+The formulas for mean and standard deviation of the log-normal distribution are gathered from [\textcolor{blue}{Wikipedia}](https://en.wikipedia.org/wiki/Log-normal_distribution).
