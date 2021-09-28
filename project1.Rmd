@@ -470,6 +470,6 @@ which is a Weibull distribution with shape parameter $k = 1$ and scale parameter
 $$
   T \sim \mathrm{Weibull}(t;\ e^{-(\beta_0+\beta_1)},\ 1) = e^{\beta_0 + \beta_1} e^{-e^{\beta_0 + \beta_1}\ t}.
 $$
-The estimate for the shape parameter is $\hat k = 1$. Using that $\boldsymbol{\beta} = (\beta_0,\ \beta_1)$.
+The estimate for the shape parameter is $\hat k = 1$. Using that $\boldsymbol{\beta} = (\beta_0,\ \beta_1)$. Then for a realization $\boldsymbol{\hat\beta} = (b_0,\ b_1)$, the estimate for the scale parameter is
 
 
