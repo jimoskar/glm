@@ -438,31 +438,74 @@ The formulas for mean and standard deviation of the log-normal distribution are 
 
 
 ## e)
-For now we assume that the link function is the cloglog, given by
+The cloglog link function is given by
 
 $$
 g(\pi) = \text{cloglog}(\pi) = \ln(-\ln(1-\pi)).
 $$
-In addition, our model only use log(age) as a covariate. Using the same notation as before, it follows that 
+Since our model is assumed to have the form "menarch $\sim$ log(age)" with the cloglog link, $\eta$ becomes
+$$
+  \eta = \beta_0 + \beta_1 \ln(t),
+$$
+where $t$ is age. Thus the probability that menarche has occurred is given as
+$$
+  \pi = g^{-1}(\eta) = 1 - e^{-e^{\eta}} = 1 - e^{-e^{\beta_0 + \beta_1 \ln t}} = 1 - e^{-(e^{\beta_0} t^{\beta_1})},
+$$
+where it was used that $e^{\beta_1 \ln t} = t^{\beta_1}$. Using that $\pi$ is the cumulative distribution function of $T$, i.e. Pr$(T \le t) = \pi$, it follows that the distribution of $T$ is given by
+$$
+  T \sim \frac{\partial}{\partial t} \pi = \frac{\partial}{\partial t} \left(1 - e^{-(e^{\beta_0} t^{\beta_1})}\right) = \beta_1 e^{\beta_0}\ t^{\beta_1 - 1}\ e^{-(e^{\beta_0} t^{\beta_1})}.
+$$
+Recall that the probability density function of a Weibull distribution is given by
+$$
+    \text{Weibull}(x;\lambda,k) = \frac{k}{\lambda} \left(\frac{x}{\lambda}\right)^{k-1} e^{-(x/\lambda)^k}
+$$
+where $k$ is the shape parameter and $\lambda$ is the scale parameter. If $k = \beta_1$ and $\lambda = e^{- \frac{\beta_0}{\beta_1}}$, then
+$$
+\begin{split}
+\text{Weibull}\left(t;e^{-\frac{\beta_0}{\beta_1}},\beta_1\right) &= \frac{\beta_1}{e^{-\frac{\beta_0}{\beta_1}}} \left(\frac{x}{e^{-\frac{\beta_0}{\beta_1}}}\right)^{\beta_1-1} e^{-\left(t\  e^{\frac{\beta_0}{\beta_1}}\right)^{\beta_1}}\\
+&= \beta_1 e^{\beta_0}\ t^{\beta_1 - 1}\ e^{-(e^{\beta_0} t^{\beta_1})},\\
+\end{split}
+$$
+which shows that $T \sim \text{Weibull}\left(t;e^{-\frac{\beta_0}{\beta_1}},\beta_1\right)$. The shape and scale parameters are given as
+$$
+k = \beta_1, \qquad \lambda = e^{- \beta_0 / \beta_1}.
+$$
 
+Due to the functional invariance of the maximum likelihood estimator, we can write the MLEs of $k$ and $\lambda$ as
 $$
-  \eta_i = \beta_0 + \beta_1 \ln(t_i),
+\hat k = \hat{\beta_1}, \qquad \hat \lambda = e^{- \hat \beta_0 / \hat \beta_1}.
 $$
-where $t_i$ is the age. Thus
+Fitting the appropriate model in R and finding the estimate for the shape and scale parameter:
+```{r}
+mod.cloglog <- glm(menarche ~ log(age), family = binomial(link = 'cloglog'), data = juul.girl)
 
-$$
-  \mathrm{Pr}(T_i \le t_i) = \pi_i = g^{-1}(\eta_i) = 1 - e^{-e^{\eta_i}} = 1 - e^{-e^{\beta_0 + \beta_1}\ t_i} = 1 - e^{-\gamma t_i},
-$$
-where $\gamma = e^{\beta_0 + \beta_1}$. This is the cumulative distribution function of $T_i$, so the distribution of $T$ is given by
+beta0 <- mod.cloglog$coefficients[1]
+beta1 <- mod.cloglog$coefficients[2]
 
-$$
-  T \sim \frac{\partial}{\partial t} \pi = \frac{\partial}{\partial t} \left(1 - e^{-\gamma\ t}\right) = \gamma\ e^{-\gamma\ t},
-$$
-which is a Weibull distribution with shape parameter $k = 1$ and scale parameter $\lambda = \frac{1}{\gamma} = e^{-(\beta_0 + \beta_1)}$. That is,
+k <- beta1
+lam <- exp(-beta0/beta1)
 
-$$
-  T \sim \mathrm{Weibull}(t;\ e^{-(\beta_0+\beta_1)},\ 1) = e^{\beta_0 + \beta_1} e^{-e^{\beta_0 + \beta_1}\ t}.
-$$
-The estimate for the shape parameter is $\hat k = 1$. Using that $\boldsymbol{\beta} = (\beta_0,\ \beta_1)$. Then for a realization $\boldsymbol{\hat\beta} = (b_0,\ b_1)$, the estimate for the scale parameter is
+k
 
+lam
+```
+The estimated values for the shape parameter is $k = 13.572$ and the scale parameter is $\lambda = 13.717$.
 
+If $W \sim \text{Weibull}(x;\lambda,k)$, the mean and variance of $W$ are given as
+$$
+E[\text{W}] = \lambda\ \Gamma\left(1 + \frac{1}{k}\right), \quad \text{Var}[\text{W}] = \lambda^2 \left( \Gamma\left(1 + \frac{2}{k}\right) - \Gamma^2\left(1 + \frac{1}{k}\right) \right),
+$$
+where $\Gamma$ is the gamma function. In R, we get
+```{r}
+mu <- lam * gamma(1+1/k)
+SE <- lam * sqrt( gamma(1+2/k) - gamma(1+1/k)^2 )
+
+mu
+
+SE
+```
+The mean is $13.20$ and the standard error is $1.19$.
+
+## f)
+
+Dette må vel også skrives en gang...
