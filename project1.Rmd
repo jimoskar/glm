@@ -305,22 +305,34 @@ This, in turn, gives
 $$
 \Phi^{-1}(\pi_i) = -\frac{\mu}{\sigma} + \frac{1}{\sigma}t_i = \beta_0 + \beta_1t_i,
 $$
-where $\beta_0 = -\mu/\sigma$ and $\beta_1 = 1/\sigma$.
+where $\beta_0 = -\mu/\sigma$ and $\beta_1 = 1/\sigma$. Or equivalently:
 
-Let $\mu = \mu(\beta_0,\beta_1)$ and $\sigma = \sigma(\beta_0,\beta_1)$. If $\hat\beta_0$ and $\hat\beta_1$ denotes the MLEs of $\beta_0$ and $\beta_1$, respectively, then $\hat\mu = \mu(\hat\beta_0,\hat\beta_1)$ is the MLE of $\mu$  and $\hat\sigma = \sigma(\hat\beta_0,\hat\beta_1)$ of $\sigma$. It follows that
 $$
-  \sigma = \frac{1}{\beta_1}, \quad \mu = -\frac{\beta_0}{\beta_1},
+  \sigma = \frac{1}{\beta_1}, \quad \mu = -\frac{\beta_0}{\beta_1}.
 $$
-Consequently, the MLEs are given as
+Due to the [ \textcolor{blue}{functional invariance of the maximum likelihood estimator}](https://en.wikipedia.org/wiki/Maximum_likelihood_estimation#Functional_invariance), we can write the MLEs of $\sigma$ and $\mu$ as 
+
 $$
-  \hat\sigma(\hat\beta_1) = \frac{1}{\hat\beta_1}, \quad \hat\mu(\hat\beta_0, \hat\beta_1) = -\frac{\hat\beta_0}{\hat\beta_1}.
+  \hat\sigma(\hat\beta_1) = \frac{1}{\hat\beta_1}, \quad \hat\mu(\hat\beta_0, \hat\beta_1) = -\frac{\hat\beta_0}{\hat\beta_1},
 $$
-The corresponding standard errors of these estimators can then be estimated using the delta method. A first order Taylor expansion of $\hat{\mu}$ gives \textcolor{red}{Legge til mitt forslag under:}
+where $\hat\beta_0$ and $\hat\beta_1$ denote the MLEs of $\beta_0$ and $\beta_1$, respectively. Thus, the maximum likelihood estimates for this data set can be computed as
+
+```{r}
+mod.probit <- glm(menarche ~ age, family = binomial(link = 'probit'), data = juul.girl)
+b <- mod.probit$coefficients
+mle.mu <- -b[1]/b[2]
+mle.sigma <- 1/b[2] 
+mle.mu
+mle.sigma
+```
+
+The standard errors of $\hat{\mu}$ and $\hat{\sigma}$ can then be estimated using the delta method. A first order Taylor expansion of $\hat{\mu}$ gives
 
 $$
 \hat\mu \approx \hat\mu(\boldsymbol{b}) + \nabla \hat\mu(\boldsymbol{b})^T(\hat{\boldsymbol{\beta}} - \boldsymbol{b}),
 $$
-where we have used the notation $\hat{\boldsymbol{\beta}} = (\hat{\beta}_0, \hat{\beta_1})^T$ and exoanded around $\hat{\boldsymbol{\beta}} = \boldsymbol{b} = (b_0,b_1)^T$. Next, we take the variance of this linear approximation, such that
+
+where we have used the notation $\hat{\boldsymbol{\beta}} = (\hat{\beta}_0, \hat{\beta_1})^T$ and expanded around $\hat{\boldsymbol{\beta}} = \boldsymbol{b} = (b_0,b_1)^T$. Next, we take the variance of this linear approximation, such that
 
 $$
 \begin{split}
@@ -328,7 +340,7 @@ $$
 &=  \nabla\hat{\mu}(\boldsymbol{b})^T \mathrm{Var}(\hat{\boldsymbol{\beta}})\nabla\hat{\mu}(\boldsymbol{b}).
 \end{split}
 $$
-Since $\nabla \hat{\mu} = (-1/\hat\beta_1, \hat{\beta}_0 /\hat{\beta_1}^2)^T$, we can calculate the standard error as in the code below
+Using $\nabla \hat{\mu} = (-1/\hat\beta_1, \hat{\beta}_0 /\hat{\beta_1}^2)^T$, we can calculate the standard error as in the code below:
 ```{r}
 mod.probit <- glm(menarche ~ age, family = binomial(link = 'probit'), data = juul.girl)
 b <- mod.probit$coefficients
@@ -336,46 +348,27 @@ grad.mu <- c(-1/b[2], b[1]/b[2]^2)
 se.mu <- t(grad.mu) %*% vcov(mod.probit) %*% grad.mu
 se.mu
 ```
-\textcolor{red}{et annerledes svar her altså. Hva tenker du ?}
+That is, $\widehat{\mathrm{SE}(\hat{\mu})} =$ `r se.mu`. We follow the same procedure to estimate the standard error of $\hat{\sigma}$. First, we approximate it by a first order Taylor series expansion:
+$$
+\hat\sigma \approx \hat\sigma(\boldsymbol{b}) + \nabla \hat\sigma(\boldsymbol{b})^T(\hat{\boldsymbol{\beta}} - \boldsymbol{b}),
+$$
+which implies that the variance can be approximated as 
 
 $$
-  \mu(\beta_0,\beta_1) \approx \hat\mu + \frac{\partial \mu}{\partial \beta_0}(\hat{\beta}_0, \hat{\beta}_1) \left(\beta_0 - \hat\beta_0\right) + \frac{\partial \mu}{\partial \beta_1} \left(\beta_1 - \hat\beta_1\right),
+\begin{split}
+\mathrm{Var}(\hat\sigma) &\approx \mathrm{Var}\left(\nabla\hat{\sigma}(\boldsymbol{b})^T\hat{\boldsymbol{\beta}} \right) \\
+&=  \nabla\hat{\sigma}(\boldsymbol{b})^T \mathrm{Var}(\hat{\boldsymbol{\beta}})\nabla\hat{\sigma}(\boldsymbol{b}).
+\end{split}
 $$
-so
-$$
-  \begin{split}
-    \text{Var}(\mu) &\approx \left(\frac{\partial \mu}{\partial \beta_0}\right)^2 \text{Var}\left(\beta_0\right) + \left(\frac{\partial \mu}{\partial \beta_1}\right)^2 \text{Var}\left(\beta_1\right) + 2 \left(\frac{\partial \mu}{\partial \beta_0}\right) \left(\frac{\partial \mu}{\partial \beta_1}\right) \text{Cov}\left(\beta_0, \beta_1\right)\\
-    & = \left(-\frac{1}{\beta_1}\right)^2 \text{Var}\left(\beta_0\right) + \left(\frac{\beta_0}{\beta_1^2}\right)^2 \text{Var}\left(\beta_1\right) - \frac{2 \beta_0}{\beta_1^3} \text{Cov}\left(\beta_0, \beta_1\right).\\
-  \end{split}
-$$
-
-A similar derivation for $\sigma$ yields
-$$
-  \begin{split}
-    \text{Var}(\sigma) &\approx \left(\frac{\partial \sigma}{\partial \beta_0}\right)^2 \text{Var}\left(\beta_0\right) + \left(\frac{\partial \sigma}{\partial \beta_1}\right)^2 \text{Var}\left(\beta_1\right) + 2 \left(\frac{\partial \sigma}{\partial \beta_0}\right) \left(\frac{\partial \sigma}{\partial \beta_1}\right) \text{Cov}\left(\beta_0, \beta_1\right)\\
-    & = \left(-\frac{1}{\beta_1^2}\right)^2 \text{Var}\left(\beta_1\right).\\
-  \end{split}
-$$
-
-Thus, the standard error of the MLE estimators are
-$$
- \widehat{\text{SE}\left(\hat\sigma\right)} = \frac{1}{\hat\beta_1^2}\ \text{SE}(\hat\beta_1), \quad \widehat{\text{SE}(\hat\mu)} = \frac{1}{\hat\beta_1}\sqrt{\text{Var}(\hat\beta_0) + \left(\frac{\hat\beta_0}{\hat\beta_1}\right) \text{Var}(\hat\beta_1)},
-$$
-where it was used (assumed?) that $\text{Cov}(\beta_0, \beta_1) = 0$. In R we find the $\beta$'s and their standard error using the summary-function.
-
+Using that $\nabla\hat{\sigma} = (0, -1/\beta_1^2)^T$, we calculate the standard error as in the code below.
 ```{r}
-mod.probit <- glm(menarche ~ age, family = binomial(link = 'probit'), data = juul.girl)
-s <- summary(mod.probit)
-df <- s$coefficients
-df
-beta0 <- df[1,1]
-beta1 <- df[1,2]
-se0 <- df[2,1]
-se1 <- df[2,2]
+grad.sigma <- c(0, -1/b[2]^2)
+se.sigma <- t(grad.sigma) %*% vcov(mod.probit) %*% grad.sigma
+se.sigma
 ```
+That is, $\widehat{\mathrm{SE}(\hat{\sigma})} =$ `r se.sigma`.
 
-From the readout we get $\hat\beta_0 =$ `r beta0` with a standard error of `r se0` and $\hat\beta_1 =$ `r beta1` with a standard error of `r se1`. Thus $\hat\mu =$ `r -beta0/beta1` and $\hat \sigma =$ `r 1/beta1`. Their standard errors are $\widehat{\text{SE}\left(\hat\sigma\right)} =$ `r 1/beta1^2 * se1` and $\widehat{\text{SE}\left(\hat\mu\right)} =$ `r 1/beta1 * sqrt(se0^2 + (beta0/beta1)*se1^2)`.
-
+\textcolor{red}{Q: are we estimating the standerd error (SE) or is the SE an estimate in itself? i.e. we dont need the hat?}
 
 ## c)
 
