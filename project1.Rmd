@@ -442,3 +442,34 @@ $$
 $$
 
 The formulas for mean and standard deviation of the log-normal distribution are gathered from [\textcolor{blue}{Wikipedia}](https://en.wikipedia.org/wiki/Log-normal_distribution).
+
+
+## e)
+For now we assume that the link function is the cloglog, given by
+
+$$
+g(\pi) = \text{cloglog}(\pi) = \ln(-\ln(1-\pi)).
+$$
+In addition, our model only use log(age) as a covariate. Using the same notation as before, it follows that 
+
+$$
+  \eta_i = \beta_0 + \beta_1 \ln(t_i),
+$$
+where $t_i$ is the age. Thus
+
+$$
+  \mathrm{Pr}(T_i \le t_i) = \pi_i = g^{-1}(\eta_i) = 1 - e^{-e^{\eta_i}} = 1 - e^{-e^{\beta_0 + \beta_1}\ t_i} = 1 - e^{-\gamma t_i},
+$$
+where $\gamma = e^{\beta_0 + \beta_1}$. This is the cumulative distribution function of $T_i$, so the distribution of $T$ is given by
+
+$$
+  T \sim \frac{\partial}{\partial t} \pi = \frac{\partial}{\partial t} \left(1 - e^{-\gamma\ t}\right) = \gamma\ e^{-\gamma\ t},
+$$
+which is a Weibull distribution with shape parameter $k = 1$ and scale parameter $\lambda = \frac{1}{\gamma} = e^{-(\beta_0 + \beta_1)}$. That is,
+
+$$
+  T \sim \mathrm{Weibull}(t;\ e^{-(\beta_0+\beta_1)},\ 1) = e^{\beta_0 + \beta_1} e^{-e^{\beta_0 + \beta_1}\ t}.
+$$
+The estimate for the shape parameter is $\hat k = 1$. Using that $\boldsymbol{\beta} = (\beta_0,\ \beta_1)$.
+
+
