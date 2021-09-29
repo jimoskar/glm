@@ -315,18 +315,15 @@ Due to the [ \textcolor{blue}{functional invariance of the maximum likelihood es
 $$
   \hat\sigma(\hat\beta_1) = \frac{1}{\hat\beta_1}, \quad \hat\mu(\hat\beta_0, \hat\beta_1) = -\frac{\hat\beta_0}{\hat\beta_1},
 $$
-where $\hat\beta_0$ and $\hat\beta_1$ denote the MLEs of $\beta_0$ and $\beta_1$, respectively. Thus, the maximum likelihood estimates for this data set can be computed as
+where $\hat\beta_0$ and $\hat\beta_1$ denote the MLEs of $\beta_0$ and $\beta_1$, respectively. Thus, the maximum likelihood estimates for this data set can be computed as in the code below.
 
 ```{r}
 mod.probit <- glm(menarche ~ age, family = binomial(link = 'probit'), data = juul.girl)
 b <- mod.probit$coefficients
 mle.mu <- -b[1]/b[2]
 mle.sigma <- 1/b[2] 
-mle.mu
-mle.sigma
 ```
-
-The standard errors of $\hat{\mu}$ and $\hat{\sigma}$ can then be estimated using the delta method. A first order Taylor expansion of $\hat{\mu}$ gives
+That is, $\hat{\mu}=$ `r mle.mu` and $\hat{\sigma} =$ `r mle.sigma`. The standard errors (estimates of the standard deviation) of $\hat{\mu}$ and $\hat{\sigma}$ can then be computed using the delta method. A first order Taylor expansion of $\hat{\mu}$ gives
 
 $$
 \hat\mu \approx \hat\mu(\boldsymbol{b}) + \nabla \hat\mu(\boldsymbol{b})^T(\hat{\boldsymbol{\beta}} - \boldsymbol{b}),
@@ -348,7 +345,7 @@ grad.mu <- c(-1/b[2], b[1]/b[2]^2)
 se.mu <- t(grad.mu) %*% vcov(mod.probit) %*% grad.mu
 se.mu
 ```
-That is, $\widehat{\mathrm{SE}(\hat{\mu})} =$ `r se.mu`. We follow the same procedure to estimate the standard error of $\hat{\sigma}$. First, we approximate it by a first order Taylor series expansion:
+That is, $\mathrm{SE}(\hat{\mu}) =$ `r se.mu`. We follow the same procedure to estimate the standard error of $\hat{\sigma}$. First, we approximate it by a first order Taylor series expansion:
 $$
 \hat\sigma \approx \hat\sigma(\boldsymbol{b}) + \nabla \hat\sigma(\boldsymbol{b})^T(\hat{\boldsymbol{\beta}} - \boldsymbol{b}),
 $$
@@ -366,18 +363,15 @@ grad.sigma <- c(0, -1/b[2]^2)
 se.sigma <- t(grad.sigma) %*% vcov(mod.probit) %*% grad.sigma
 se.sigma
 ```
-That is, $\widehat{\mathrm{SE}(\hat{\sigma})} =$ `r se.sigma`.
-
-\textcolor{red}{Q: are we estimating the standerd error (SE) or is the SE an estimate in itself? i.e. we dont need the hat?}
+That is, $\mathrm{SE}(\hat{\sigma}) =$ `r se.sigma`.
 
 ## c)
-
+We fit the desired model in R:
 ```{r}
 mod.logit <- glm(menarche ~ age, family = binomial(link = 'logit'), data = juul.girl)
-mod.logit$coefficients[2]
-
+mod.logit$coefficients
 ```
-To show find the distribution of the $T_i$'s, we start with the cumulative distribution:
+To find the distribution of the $T_i$'s, we start with the cumulative distribution:
 
 $$
 \mathrm{Pr}(T_i \le t_i) = \mathrm{Pr}(y_i = 1 \mid t_i) = \pi_i = \frac{1}{1 + e^{-\eta_i}}.
@@ -392,7 +386,7 @@ f_{T_i}(t_i) &= \frac{\mathrm{d}}{\mathrm{d}t_i}\left(\frac{1}{1 + e^{-\eta_i}}\
 \end{split}
 $$
 
-This is the logistic distribution, with parameters $\mu = -\beta_0/\beta_1$ and $s = 1/\beta_1$, where we have used the parametrization from [\textcolor{blue}{Wikipedia}](https://en.wikipedia.org/wiki/Logistic_distribution). We compute estimates of the mean and variance from the estimates of $\beta_0$ and $\beta_1$ in the output above. An estimate of the mean is then given by $\text{E}(T_i) =  -\beta_0/\beta1 \approx$ `r -mod.logit$coefficients[1]/mod.logit$coefficients[2]` and an estimate of the variance is given by $\text{Var}(T_i) = s^2\pi^2/3 = \pi^2/(3\beta_1^2) \approx$ `r pi^2/(3*mod.logit$coefficients[2]^2)`.
+This is the logistic distribution, with parameters $\mu = -\beta_0/\beta_1$ and $s = 1/\beta_1$, where we have used the parametrization from [\textcolor{blue}{Wikipedia}](https://en.wikipedia.org/wiki/Logistic_distribution). We compute estimates of the mean and variance from the estimates of $\beta_0$ and $\beta_1$, which are given in the code output above. We then estimate the mean, given by $\text{E}(T_i) =  -\beta_0/\beta_1 \approx$ `r -mod.logit$coefficients[1]/mod.logit$coefficients[2]`. Next, we estimate the standard deviation, given by  $\sqrt{\text{Var}(T_i)} = s\pi/\sqrt{3} = \pi/(\sqrt{3}\beta_1) \approx$ `r pi/(sqrt(3)*mod.logit$coefficients[2])`.
 
 ## d)
 We now assume that the latent ages follow a log-normal distribution, i.e.
@@ -443,7 +437,7 @@ The cloglog link function is given by
 $$
 g(\pi) = \text{cloglog}(\pi) = \ln(-\ln(1-\pi)).
 $$
-Since our model is assumed to have the form "menarch $\sim$ log(age)" with the cloglog link, $\eta$ becomes
+Since our model is assumed to have the form `menarche ~ log(age)` with the cloglog link, $\eta$ becomes
 $$
   \eta = \beta_0 + \beta_1 \ln(t),
 $$
