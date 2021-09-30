@@ -1,6 +1,6 @@
 ---
 title: 'TMA4315: Project 1'
-author: "Jim Totland, Martin Gudahl Tufte"
+author: "jototlan@stud.ntnu.no (10018), martigtu@stud.ntnu.no (10037)"
 date: "9/8/2021"
 output: pdf_document
 ---
@@ -55,23 +55,20 @@ $$
   &= \sum_{i = 1}^n \left[ \frac{\phi(\eta_i)}{\Phi(\eta_i)(1 - \Phi(\eta_i))}\right]^2  \pi_i(1-\pi_i) \boldsymbol{x}_i \boldsymbol{x}_i^T = \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} \boldsymbol{x}_i \boldsymbol{x}_i^T,
 \end{split}
 $$
-Where in the third equality we have used that the $y_i$'s are independent. The expected Fisher information can also be verified to have this expression by the general relationship
+where in the third equality we have used that the $y_i$'s are independent. The expected Fisher information can also be verified to have this form by the general relationship
 $$
   F(\boldsymbol{\beta}) = \sum_{i=1}^n \frac{h'(\eta_i)^2}{\mathrm{Var}(y_i)} \boldsymbol{x}_i \boldsymbol{x}_i^T,
 $$
-where $h'(\eta_i) = \Phi'(\eta_i) = \phi(\eta_i)$ and $\mathrm{Var}(y_i) = \pi_i(1-\pi_i) = \Phi(\eta_i)(1-\Phi(\eta_i))$.
-
-
-## b) 
-
-The expected Fisher information is given by
+where $h'(\eta_i) = \Phi'(\eta_i) = \phi(\eta_i)$ and $\mathrm{Var}(y_i) = \pi_i(1-\pi_i) = \Phi(\eta_i)(1-\Phi(\eta_i))$. We also note that the expected Fisher information can be written on matrix form as
 
 $$
-  F(\boldsymbol{\beta}) = \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} \boldsymbol{x}_i \boldsymbol{x}_i^T = X^T W X,
+ F(\boldsymbol{\beta}) = X^T W X,
 $$
 where $W = \mathrm{diag}\left(\frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))}\right)$.
 
-The Fisher scoring algorithm states that the next iterate is given by
+
+## b)
+The Fisher scoring algorithm gives the following iteration scheme:
 
 $$
   \boldsymbol{\beta}^{(t+1)} = \boldsymbol{\beta}^{(t)} + F(\boldsymbol{\beta}^{(t)})^{-1} \boldsymbol{s}(\boldsymbol{\beta}^{(t)}).
@@ -94,12 +91,13 @@ We also need the deviance, which is defined as
  $$
    D = 2( l_{\mathrm{saturated}} - l(\hat{\boldsymbol{\beta}})).
  $$
+ 
 When we fit a parameter for each data point (which is the case for the saturated model), the result for the Bernoulli distribution is that $\hat{\pi}_i = y_i$. This means that the likelihood function of the saturated model is given by
 
 $$
 L_{\mathrm{saturated}} = \prod_{i = 1}^n \hat{\pi}_i^{y_i}(1-\hat{\pi}_i)^{1-y_i} = \prod_{i = 1}^n y_i^{y_i}(1 + y_i)^{1-y_i} = 1,
 $$
-Where we have used $0^0 = 1$. Consequently, the log-likelihood $l_{\mathrm{saturated}} = \mathrm{ln}(1) =  0$ and the deviance becomes $-2l(\hat{\boldsymbol{\beta}})$. Next follows the Implementation of `myglm` in R:
+Where we have used $0^0 = 1$. Consequently, the log-likelihood $l_{\mathrm{saturated}} = \mathrm{ln}(1) =  0$ and the deviance becomes $D= -2l(\hat{\boldsymbol{\beta}})$. Next follows the Implementation of `myglm` in R:
 
 ```{r}
 Phi <- function(x) return (pnorm(x))
@@ -289,8 +287,8 @@ Relating to the `juul` data set, we define for each observation/individual
 $$
 y_i = 
 \begin{cases}
-  0, \text{  if menarche has occured.} \\
-  1, \text{  if menarche has not occured.}
+  1, \text{  if menarche has occured.} \\
+  0, \text{  if menarche has not occured.}
 \end{cases}
 $$
 and $t_i$ as the age at the time of examination, which corresponds to `age` in the data set. Let $T_i \sim \mathcal{N}(\mu, \sigma^2)$, where $T_i$ is the time until menarche occurs for the $i$'th individual. Furthermore, let
@@ -425,7 +423,7 @@ $$
 and we can estimate the standard deviation as 
 
 $$
-\sqrt{[\exp(\hat{\sigma}^2) - 1]\exp(2\hat{\mu} + \hat{\sigma}^2) }= \text{`r sqrt((exp(sigma.hat^2) - 1) * (2*mu.hat + sigma.hat^2))`}.
+\sqrt{[\exp(\hat{\sigma}^2) - 1]\exp(2\hat{\mu} + \hat{\sigma}^2) }= \text{`r sqrt((exp(sigma.hat^2) - 1) * exp(2*mu.hat + sigma.hat^2))`}.
 $$
 
 The formulas for mean and standard deviation of the log-normal distribution are gathered from [\textcolor{blue}{Wikipedia}](https://en.wikipedia.org/wiki/Log-normal_distribution).
