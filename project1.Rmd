@@ -1,7 +1,6 @@
 ---
 title: 'TMA4315: Project 1'
 author: "jototlan@stud.ntnu.no (10018), martigtu@stud.ntnu.no (10037)"
-date: "9/8/2021"
 output: pdf_document
 ---
 
@@ -104,6 +103,8 @@ $$
 L_{\mathrm{saturated}} = \prod_{i = 1}^n \hat{\pi}_i^{y_i}(1-\hat{\pi}_i)^{1-y_i} = \prod_{i = 1}^n y_i^{y_i}(1 + y_i)^{1-y_i} = 1,
 $$
 Where we have used $0^0 = 1$. Consequently, the log-likelihood $l_{\mathrm{saturated}} = \mathrm{ln}(1) =  0$ and the deviance becomes $D= -2l(\hat{\boldsymbol{\beta}})$. Next follows the implementation of `myglm` in R:
+
+\newpage
 
 ```{r}
 Phi <- function(x) return (pnorm(x))
