@@ -11,12 +11,13 @@ knitr::opts_chunk$set(echo = TRUE)
 
 # Problem 1
 ## a)
-Since the response variables $y_i \sim \mathrm{Bernoulli}(\pi_i)$, where $\pi_i = \Pr(y_i=1 \mid \boldsymbol{x}_i)$. The conditional mean is given by $\mathrm{E}y_i = \pi_i$, which is connected to the covariates via the following relationship:
+Since the response variables $y_i \sim \mathrm{Bernoulli}(\pi_i)$, where $\pi_i = \Pr(y_i=1 \mid \boldsymbol{x}_i)$. The conditional mean is given by $\mathrm{E}(y_i) = \pi_i$, which is connected to the covariates via the relationship
 
 $$
-\boldsymbol{x}_i^T\boldsymbol{\beta} =: \eta_i = \Phi^{-1}(\pi_i),
+\boldsymbol{x}_i^T\boldsymbol{\beta} = \eta_i = \Phi^{-1}(\pi_i),
 $$
-or equivalently: $\pi_i = \Phi(\eta_i)$. This results in the likelihood function
+
+or equivalently $\pi_i = \Phi(\eta_i)$. This results in the likelihood function
 
 $$
 \begin{split}
@@ -27,7 +28,7 @@ $$
 Thus, the log-likelihood becomes
 
 $$
-l(\boldsymbol{\beta}) := \mathrm{ln}(L(\boldsymbol{\beta})) = \sum_{i = 1}^n \underbrace{y_i \mathrm{ln}(\Phi(\eta_i)) + (1- y_i)\mathrm{ln}(1-\Phi(\eta_i))}_{= l_i(\boldsymbol{\beta})} = \sum_{i = 1}^nl_i(\boldsymbol{\beta}).
+l(\boldsymbol{\beta}) = \mathrm{ln}(L(\boldsymbol{\beta})) = \sum_{i = 1}^n \underbrace{y_i \mathrm{ln}(\Phi(\eta_i)) + (1- y_i)\mathrm{ln}(1-\Phi(\eta_i))}_{= l_i(\boldsymbol{\beta})} = \sum_{i = 1}^nl_i(\boldsymbol{\beta}).
 $$
 To find the score function, we calculate
 
@@ -43,10 +44,16 @@ $$
 Consequently, the score function is given by 
 
 $$
-\boldsymbol{s}(\boldsymbol{\beta} ) = \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)\boldsymbol{x}_i = X^TD\Sigma^{-1}(\boldsymbol{y} - \boldsymbol{\mu}),
+\boldsymbol{s}(\boldsymbol{\beta} ) = \frac{\partial l(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}} = \sum_{i=1}^n \frac{\partial l_i(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}} = \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)\boldsymbol{x}_i.
 $$
 
-where $D = \text{diag}(\phi(\eta_i))$ and $\Sigma = \text{diag}(\text{Var}(y_i)) = \text{diag}(\Phi(\eta_i)(1-\Phi(\eta_i)))$. Next, we find the expected Fisher information, $F(\boldsymbol{\beta})$. We find it by using the result
+On matrix notation, the score function can be written as
+
+$$
+\boldsymbol{s}(\boldsymbol{\beta} ) = X^TD\Sigma^{-1}(\boldsymbol{y} - \boldsymbol{\mu}),
+$$
+
+where $X$ is the design matrix, $D = \text{diag}(\phi(\eta_i))$, $\Sigma = \text{diag}(\text{Var}(y_i)) = \text{diag}(\Phi(\eta_i)(1-\Phi(\eta_i)))$ and $\boldsymbol\mu = [\Phi(\eta_1) \cdots\Phi(\eta_n)]^T$. Next, we find the expected Fisher information, $F(\boldsymbol{\beta})$. We find it by using the result
 
 $$
 \begin{split}
@@ -68,7 +75,7 @@ where $W = \mathrm{diag}\left(\frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i
 
 
 ## b)
-The Fisher scoring algorithm gives the following iteration scheme:
+The Fisher scoring algorithm is given by
 
 $$
   \boldsymbol{\beta}^{(t+1)} = \boldsymbol{\beta}^{(t)} + F(\boldsymbol{\beta}^{(t)})^{-1} \boldsymbol{s}(\boldsymbol{\beta}^{(t)}).
@@ -86,36 +93,31 @@ $$
 $$
 -->
 
-We also need the deviance, which is defined as
+The deviance is defined as
 
  $$
-   D = 2( l_{\mathrm{saturated}} - l(\hat{\boldsymbol{\beta}})).
+   D = 2( l_{\mathrm{saturated}} - l(\hat{\boldsymbol{\beta}})),
  $$
- 
-When we fit a parameter for each data point (which is the case for the saturated model), the result for the Bernoulli distribution is that $\hat{\pi}_i = y_i$. This means that the likelihood function of the saturated model is given by
+where the saturated model is a model with as many explanatory variables as there are observations. This implies that we can fit a parameter for each data point. For the Bernoulli distribution this parameter is $\hat{\pi}_i = y_i$. This means that the likelihood function of the saturated model is given by
 
 $$
 L_{\mathrm{saturated}} = \prod_{i = 1}^n \hat{\pi}_i^{y_i}(1-\hat{\pi}_i)^{1-y_i} = \prod_{i = 1}^n y_i^{y_i}(1 + y_i)^{1-y_i} = 1,
 $$
-Where we have used $0^0 = 1$. Consequently, the log-likelihood $l_{\mathrm{saturated}} = \mathrm{ln}(1) =  0$ and the deviance becomes $D= -2l(\hat{\boldsymbol{\beta}})$. Next follows the Implementation of `myglm` in R:
+Where we have used $0^0 = 1$. Consequently, the log-likelihood $l_{\mathrm{saturated}} = \mathrm{ln}(1) =  0$ and the deviance becomes $D= -2l(\hat{\boldsymbol{\beta}})$. Next follows the implementation of `myglm` in R:
 
 ```{r}
 Phi <- function(x) return (pnorm(x))
 phi <- function(x) return (dnorm(x))
 
-
 myglm <- function(formula, data, start = NULL){
-  
   # response variable
   resp <- all.vars(formula)[1]
   y <- as.matrix( data[resp] )
-  
   
   # model matrix
   X <- model.matrix(formula, data)
   n <- dim(X)[1]
   p <- dim(X)[2]
-  
   
   # starting beta
   if (is.null(start)){
@@ -124,7 +126,6 @@ myglm <- function(formula, data, start = NULL){
   else {
     beta = start
   }
-  
   
   # Fisher scoring algorithm
   max_iter <- 50
@@ -159,17 +160,16 @@ myglm <- function(formula, data, start = NULL){
   }
   
   # Calculating std.errors and deviance.
-  std.Error <- sqrt(diag(F.inv))
-  deviance = -2 * sum(y*log(pnorm(eta)) + (1 - y)*log(1 -pnorm(eta)))
+  SE <- sqrt(diag(F.inv))
+  D = -2 * sum(y*log(pnorm(eta)) + (1 - y)*log(1 -pnorm(eta)))
   
-  return (list("coefficients" = data.frame(beta, std.Error),
-            "deviance" = deviance,
-            "vcov" = F.inv))
+  return (list("coefficients" = data.frame("Estimate" = c(beta), "Std.Error" = c(SE)),
+               "deviance" = D,
+               "vcov" = F.inv))
 }
-
 ```
 
-```{r echo = F, eval = T}
+```{r echo = F, eval = F}
 # Uses IRWLS
 myglm2 <- function(formula, data, start = NULL){
   
@@ -223,7 +223,7 @@ myglm2 <- function(formula, data, start = NULL){
   eta = X %*% beta
   deviance = -2 * sum(y*log(pnorm(eta)) + (1 - y)*log(1 -pnorm(eta)))
   
-  return (list("coefficients" = data.frame(beta, std.Error),
+  return (list("coefficients" = data.frame("Estimate" = beta, "Std. Error" = std.Error),
             "deviance" = deviance,
             "vcov" = F.inv))
 }
@@ -232,34 +232,53 @@ myglm2 <- function(formula, data, start = NULL){
 
 ## c)
 
-Simulation of 1000 Bernoulli draws with a random probability.
+To test that our implementation of myglm works, we will simulate 1000 Bernoulli draws, each with a random probability $x_i \sim \text{Uniform}(0,\ 1)$. Then the response can be written as $y_i \sim \text{Bernoulli}(x_i)$. First we create the data set in R:
 
 ```{r}
 # probability
 x = runif(1000, 0, 1)
+
 # draw n bernoulli with prob x
 y <- rbinom(1000, 1, x)
 df <- data.frame(y, x)
-### fit using glm
-model <- glm(y ~ x, family = binomial(link = "probit"), data = df)
-# beta
-model$coefficients
-# se for beta
-summary(model)
-# vcov
-vcov(model)
-# deviance
-model$deviance
+```
+
+Next, we fit a model using myglm and print the betas, standard error, variance covariance matix and the deviance:
+
+```{r}
 ### fit using myglm
 mymodel <- myglm(y ~ x, data = df)
-# beta
+
+# beta and SE
 mymodel$coefficients
+
 # vcov
 mymodel$vcov
+
 # deviance
 mymodel$deviance
 ```
 
+Now we can compare these results to the inbuilt glm-function:
+
+```{r}
+### fit using glm
+model <- glm(y ~ x, family = binomial(link = "probit"), data = df)
+
+# beta and SE
+s <- summary(model)
+s$coefficients[1:2,1:2]
+
+# vcov
+vcov(model)
+
+# deviance
+model$deviance
+```
+
+We see that our implementation gives the same numerical values.
+
+\newpage
 
 
 # Problem 2
