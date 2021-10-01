@@ -549,7 +549,7 @@ First, a short summary of the different models:
 \item{(e) cloglog link, $T \sim \mathrm{Weibull}(\lambda, k)$}, $D = $ `r mod.cloglog$deviance`
 \end{itemize}
 
-The first model (a) is perhaps the most intuitive, as we know that the normal distribution seemingly arises in countless situations in nature. It may also be the simplest model to implement and interpret/explain to people from other disciplines. Model (b) is also a natural choice, as it constitutes a standard logistic regression. However, both model (a) and (b) allows a small probability that the age, $T$, is negative, which could be disconcerting. Models (d) and (e) remedy this problem, since the log-normal and Weibull distribution only have a non-zero pdf for positive values. These models also allow for a skewed distribution which could more reasonable depending on the distribution of the sample.
+The first model (a) is perhaps the most intuitive, as we know that the normal distribution seemingly arises in countless situations in nature. It may also be the simplest model to implement and interpret/explain to people from other disciplines. Model (b) is also a natural choice, as it constitutes a standard logistic regression. However, both model (a) and (b) allows a small probability that the age, $T$, is negative, which could be disconcerting. Models (d) and (e) remedy this problem, since the log-normal and Weibull distribution only have a non-zero pdf for positive values. These models also allow for a skewed distribution which could more reasonable depending on the distribution of the sample. Looking at the deviance, $D$, model (a) has the lowest, which suggests that this model fits the data the best.
 
 
 
