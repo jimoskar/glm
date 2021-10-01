@@ -378,7 +378,7 @@ Using $\nabla \hat{\mu} = (-1/\hat\beta_1, \hat{\beta}_0 /\hat{\beta_1}^2)^T$, w
 mod.probit <- glm(menarche ~ age, family = binomial(link = 'probit'), data = juul.girl)
 b <- mod.probit$coefficients
 grad.mu <- c(-1/b[2], b[1]/b[2]^2)
-se.mu <- t(grad.mu) %*% vcov(mod.probit) %*% grad.mu
+se.mu <- sqrt(t(grad.mu) %*% vcov(mod.probit) %*% grad.mu)
 se.mu
 ```
 That is, $\mathrm{SE}(\hat{\mu}) =$ `r se.mu`. We follow the same procedure to estimate the standard error of $\hat{\sigma}$. First, we approximate it by a first order Taylor series expansion:
@@ -396,7 +396,7 @@ $$
 Using that $\nabla\hat{\sigma} = (0, -1/\beta_1^2)^T$, we calculate the standard error as in the code below.
 ```{r}
 grad.sigma <- c(0, -1/b[2]^2)
-se.sigma <- t(grad.sigma) %*% vcov(mod.probit) %*% grad.sigma
+se.sigma <- sqrt(t(grad.sigma) %*% vcov(mod.probit) %*% grad.sigma)
 se.sigma
 ```
 That is, $\mathrm{SE}(\hat{\sigma}) =$ `r se.sigma`.
