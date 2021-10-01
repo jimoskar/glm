@@ -46,7 +46,7 @@ $$
 \boldsymbol{s}(\boldsymbol{\beta} ) = \frac{\partial l(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}} = \sum_{i=1}^n \frac{\partial l_i(\boldsymbol{\beta})}{\partial \boldsymbol{\beta}} = \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)\boldsymbol{x}_i.
 $$
 
-On matrix notation, the score function can be written as
+The score function can be written on matrix form as 
 
 $$
 \boldsymbol{s}(\boldsymbol{\beta} ) = X^TD\Sigma^{-1}(\boldsymbol{y} - \boldsymbol{\mu}),
@@ -56,7 +56,7 @@ where $X$ is the design matrix, $D = \text{diag}(\phi(\eta_i))$, $\Sigma = \text
 
 $$
 \begin{split}
-  F(\boldsymbol{\beta}) &= \mathrm{Var}(\boldsymbol{s}(\beta)) = \mathrm{Var} \left( \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)\boldsymbol{x}_i \right) \\
+  F(\boldsymbol{\beta}) &= \mathrm{Var}(\boldsymbol{s}(\boldsymbol{\beta})) = \mathrm{Var} \left( \sum_{i = 1}^n \frac{y_i - \Phi(\eta_i)}{\Phi(\eta_i)(1-\Phi(\eta_i))}\phi(\eta_i)\boldsymbol{x}_i \right) \\
   &= \sum_{i = 1}^n \left[ \frac{\phi(\eta_i)}{\Phi(\eta_i)(1 - \Phi(\eta_i))}\right]^2 \mathrm{Var}(y_i \boldsymbol{x}_i) = \sum_{i = 1}^n\left[ \frac{\phi(\eta_i)}{\Phi(\eta_i)(1 - \Phi(\eta_i))}\right]^2  \boldsymbol{x}_i \mathrm{Var}(y_i) \boldsymbol{x}_i^T \\
   &= \sum_{i = 1}^n \left[ \frac{\phi(\eta_i)}{\Phi(\eta_i)(1 - \Phi(\eta_i))}\right]^2  \pi_i(1-\pi_i) \boldsymbol{x}_i \boldsymbol{x}_i^T = \sum_{i = 1}^n \frac{\phi(\eta_i)^2}{\Phi(\eta_i)(1 - \Phi(\eta_i))} \boldsymbol{x}_i \boldsymbol{x}_i^T,
 \end{split}
@@ -233,14 +233,14 @@ myglm2 <- function(formula, data, start = NULL){
 
 ## c)
 
-To test that our implementation of myglm works, we will simulate 1000 Bernoulli draws, each with a random probability $x_i \sim \text{Uniform}(0,\ 1)$. Then the response can be written as $y_i \sim \text{Bernoulli}(x_i)$. First we create the data set in R:
+To test that our implementation of `myglm` works, we will simulate 1000 Bernoulli draws, each with a random probability $\Phi(x_i)$, where we simulate the $x_i$'s from a uniform distribution. Then the response can be written as $y_i \sim \text{Bernoulli}(\Phi(x_i))$. First we create the data set in R:
 
 ```{r}
-# probability
+# simulate covariates.
 x = runif(1000, 0, 1)
 
-# draw n bernoulli with prob x
-y <- rbinom(1000, 1, x)
+# draw n Bernoulli with prob Phi(x)
+y <- rbinom(1000, 1, pnorm(x))
 df <- data.frame(y, x)
 ```
 
@@ -260,7 +260,7 @@ mymodel$vcov
 mymodel$deviance
 ```
 
-Now we can compare these results to the inbuilt glm-function:
+Now we can compare these results to the inbuilt ´glm´ function:
 
 ```{r}
 ### fit using glm
