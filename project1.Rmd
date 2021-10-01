@@ -284,22 +284,43 @@ We see that our implementation gives the same numerical values.
 
 # Problem 2
 ## a)
- 
+First, we load the `juul` data set:
 ```{r}
-#install.packages("ISwR")
 library(ISwR) # Install the package if needed
 data(juul)
 juul$menarche <- juul$menarche - 1
 juul.girl <- subset(juul, age>8 & age<20 & complete.cases(menarche))
 ```
  
- 
+Next, we fit the desired model with the inbuilt `glm` function.
 ```{r}
 mod.probit <- glm(menarche ~ age, family=binomial(link="probit"), data= juul.girl)
+```
+
+Next, we perform a Wald test, which utilizes that
+$$
+Z = \frac{\hat{\beta}_{\texttt{age}}}{\text{SE}(\hat{\beta}_{\texttt{age}})} \sim \mathcal{N}(0,1),
+$$
+under the null hypothesis. We calculate the test statistic and p-value below. 
+
+```{r}
+beta_age <- mod.probit$coefficients[2]
+
+# With normal.
+z = beta_age/sqrt(vcov(mod.probit)[2,2])
+p_val <- 2*pnorm(-z)
+sprintf("%.20f", p_val)
+
+# With Chisq.
+x <- beta_age^2/vcov(mod.probit)[2,2]
+p_val <- 1 - pchisq(x, 1)
+sprintf("%.30f", p_val)
+
+# LRT. (remove)
 anova(mod.probit, test = "Chisq")
 ```
 
-The low p-value suggests that age has an effect on the response variable.
+We see that the p-value is essentially 0, which is strong evidence that `age` has an effect on the response variable.
 
 ## b)
 Relating to the `juul` data set, we define for each observation/individual
