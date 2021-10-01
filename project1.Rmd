@@ -297,27 +297,24 @@ Next, we fit the desired model with the inbuilt `glm` function.
 mod.probit <- glm(menarche ~ age, family=binomial(link="probit"), data= juul.girl)
 ```
 
-Next, we perform a Wald test, which utilizes that
+We want to test 
+
+$$
+H_0: \beta_{\texttt{age}} = 0 \quad \text{vs.} \quad  H_1: \beta_{\texttt{age}} \ne 0,
+$$
+
+for which we use a  Wald test, which utilizes that
 $$
 Z = \frac{\hat{\beta}_{\texttt{age}}}{\text{SE}(\hat{\beta}_{\texttt{age}})} \sim \mathcal{N}(0,1),
 $$
 under the null hypothesis. We calculate the test statistic and p-value below. 
 
 ```{r}
+options(digits = 7)
 beta_age <- mod.probit$coefficients[2]
-
-# With normal.
 z = beta_age/sqrt(vcov(mod.probit)[2,2])
 p_val <- 2*pnorm(-z)
-sprintf("%.20f", p_val)
-
-# With Chisq.
-x <- beta_age^2/vcov(mod.probit)[2,2]
-p_val <- 1 - pchisq(x, 1)
 sprintf("%.30f", p_val)
-
-# LRT. (remove)
-anova(mod.probit, test = "Chisq")
 ```
 
 We see that the p-value is essentially 0, which is strong evidence that `age` has an effect on the response variable.
@@ -471,7 +468,7 @@ The formulas for mean and standard deviation of the log-normal distribution are 
 
 
 ## e)
-The cloglog link function is given by
+The cloglog link function is given by (we drop the index $i$ here)
 
 $$
 g(\pi) = \text{cloglog}(\pi) = \ln(-\ln(1-\pi)).
