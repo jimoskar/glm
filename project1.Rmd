@@ -514,27 +514,19 @@ beta1 <- mod.cloglog$coefficients[2]
 
 k <- beta1
 lam <- exp(-beta0/beta1)
-
-k
-
-lam
 ```
-The estimated values for the shape parameter is $k = 13.572$ and the scale parameter is $\lambda = 13.717$.
+Thus, we find the maximum likelihood estimates $\hat{k} =$ `r k` and $\hat{\lambda} =$ `r lam`.
 
 If $W \sim \text{Weibull}(x;\lambda,k)$, the mean and variance of $W$ are given as
 $$
 E[\text{W}] = \lambda\ \Gamma\left(1 + \frac{1}{k}\right), \quad \text{Var}[\text{W}] = \lambda^2 \left( \Gamma\left(1 + \frac{2}{k}\right) - \Gamma^2\left(1 + \frac{1}{k}\right) \right),
 $$
-where $\Gamma$ is the gamma function. In R, we get
+where $\Gamma$ is the gamma function. Again, using the functional invariance of MLEs, we find estimates $\hat{\mu}$ and $\hat{\sigma}$ of the mean and standard deviation, respectively.
 ```{r}
 mu <- lam * gamma(1+1/k)
 SE <- lam * sqrt( gamma(1+2/k) - gamma(1+1/k)^2 )
-
-mu
-
-SE
 ```
-The mean is $13.20$ and the standard error is $1.19$.
+Thus, an estimate of the mean is $\hat{\mu} =$ `r mu` and an estimate of the standard deviation is $\hat{\sigma}=$ `r SE`.
 
 ## f)
 First, a short summary of the different models:
