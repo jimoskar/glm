@@ -333,7 +333,7 @@ and $t_i$ as the age at the time of examination, which corresponds to `age` in t
 $$
 \begin{split}
 \pi_i &:= P(y_i = 1) = P(T_i \le t_i) \\
-&= P\left(\frac{T_i -\mu}{\sigma} \le \frac{t_i - \mu}{\sigma}\right) = \Phi\left(\frac{t_i - \mu}{\sigma}\right)
+&= P\left(\frac{T_i -\mu}{\sigma} \le \frac{t_i - \mu}{\sigma}\right) = \Phi\left(\frac{t_i - \mu}{\sigma}\right).
 \end{split}
 $$
 This, in turn, gives
