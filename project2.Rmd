@@ -1,0 +1,32 @@
+---
+title: 'TMA4315: Project 2'
+author: "jototlan@stud.ntnu.no (10018), martigtu@stud.ntnu.no (10037)"
+output: pdf_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+# Problem 1
+```{r}
+mammals <- read.table(
+  "https://www.math.ntnu.no/~jarlet/statmod/mammals.dat",
+  header=T)
+```
+
+## a)
+```{r}
+str(mammals)
+mammals$species = as.factor(mammals$species)
+plot(log(mammals$body), log(mammals$brain)) # Seems pretty linear.
+```
+
+
+A log-log plot of the brain mass against body mass seems to reveal a linear trend. We thus fit the following model:
+
+```{r}
+mod0 <- lm(log(brain) ~ log(body), data = mammals)
+summary(mod0)
+```
+
