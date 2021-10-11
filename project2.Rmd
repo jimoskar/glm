@@ -17,8 +17,6 @@ mammals <- read.table(
 
 ## a)
 ```{r}
-str(mammals)
-mammals$species = as.factor(mammals$species)
 plot(log(mammals$body), log(mammals$brain)) # Seems pretty linear.
 ```
 
@@ -30,3 +28,52 @@ mod0 <- lm(log(brain) ~ log(body), data = mammals)
 summary(mod0)
 ```
 
+## b)
+
+```{r}
+is.human = ifelse(mammals$species == "Human", 1, 0)
+mammals$is.human = as.factor(is.human)
+
+mod1 <- lm(log(brain) ~ log(body) + is.human, data = mammals)
+sum1 <- summary(mod1)
+```
+We use the notation $\boldsymbol{y} = X\boldsymbol{\beta} + \boldsymbol{\varepsilon}$ to represent the linear model. Here, $X$ is the $n \times p$ design matrix, where $n$ is the number of observations and $p$ is the number of parameters used in the model. As usual, $\boldsymbol{\varepsilon} \sim \mathcal{N}(\boldsymbol{0}, \sigma^2 I_n)$. This (along with the other usual assumptions \textcolor{red}{how much detail is required here??}) gives the well known result:
+
+$$
+\hat{\boldsymbol{\beta}} \sim \mathcal{N}(\boldsymbol{\beta}, \sigma^2(X^TX)^{-1}).
+$$
+We let $\hat{\boldsymbol{\beta}} = [\hat{\beta}_0, \hat{\beta}_1, \hat{\beta}_2]^T$, where $\hat{\beta}_2$ estimates the effect of being a human (we also index from 0 in the design matrix). Now we want to perform the hypothesis test
+
+$$
+H_0: \beta_2 = 0 \quad \text{vs.} \quad H_1: \beta_2 > 0.
+$$
+Under $H_0$, we obtain that
+
+$$
+\frac{\hat{\beta}_2}{\sigma\sqrt{(X^TX)^{-1}_{2,2}}} \sim \mathcal{N}(0, 1).
+$$
+
+Combining this with the fact that 
+$$
+\frac{(n-p)s^2}{\sigma^2} \sim \chi^2_{n-p},
+$$
+where $s^2 = RSS/(n-p)$, we obtain the test statistic
+
+$$
+\frac{\hat{\beta}_2}{s\sqrt{(X^TX)^{-1}_{2,2}}} \sim t_{n-p},
+$$
+under $H_0$. We perform the calculations in R:
+```{r}
+n <- nrow(mammals)
+p <- 3
+beta.2 <- mod1$coefficients[3]
+s <- sqrt(deviance(mod1))
+X <- model.matrix( ~ log(body) + is.human, data = mammals)
+XtX.inv <- solve(t(X) %*% X)
+
+
+T.stat <- beta.2/(s*sqrt(XtX.inv[3,3]))
+p.val <- pt(T.stat, n - p, lower.tail = F)
+p.val
+```
+The calculated p-value is `r p.val`, which suggest that...
