@@ -35,7 +35,7 @@ is.human = ifelse(mammals$species == "Human", 1, 0)
 mammals$is.human = as.factor(is.human)
 
 mod1 <- lm(log(brain) ~ log(body) + is.human, data = mammals)
-sum1 <- summary(mod1)
+summary(mod1)
 ```
 We use the notation $\boldsymbol{y} = X\boldsymbol{\beta} + \boldsymbol{\varepsilon}$ to represent the linear model. Here, $X$ is the $n \times p$ design matrix, where $n$ is the number of observations and $p$ is the number of parameters used in the model. As usual, $\boldsymbol{\varepsilon} \sim \mathcal{N}(\boldsymbol{0}, \sigma^2 I_n)$. This (along with the other usual assumptions \textcolor{red}{how much detail is required here??}) gives the well known result:
 
@@ -67,7 +67,7 @@ under $H_0$. We perform the calculations in R:
 n <- nrow(mammals)
 p <- 3
 beta.2 <- mod1$coefficients[3]
-s <- sqrt(deviance(mod1))
+s <- sqrt(deviance(mod1)/(n-p))
 X <- model.matrix( ~ log(body) + is.human, data = mammals)
 XtX.inv <- solve(t(X) %*% X)
 
