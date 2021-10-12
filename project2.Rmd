@@ -37,17 +37,19 @@ mammals$is.human = as.factor(is.human)
 mod1 <- lm(log(brain) ~ log(body) + is.human, data = mammals)
 summary(mod1)
 ```
+Let $\hat{\boldsymbol{\beta}} = [\hat{\beta}_0, \hat{\beta}_1, \hat{\beta}_2]^T$ be the coefficient estimates given in the summary above. Then the estimated effect on brain mass from being a human is $\hat{\beta}_3 \approx$ `r mod1$coefficents[3]`.
+
 We use the notation $\boldsymbol{y} = X\boldsymbol{\beta} + \boldsymbol{\varepsilon}$ to represent the linear model. Here, $X$ is the $n \times p$ design matrix, where $n$ is the number of observations and $p$ is the number of parameters used in the model. As usual, $\boldsymbol{\varepsilon} \sim \mathcal{N}(\boldsymbol{0}, \sigma^2 I_n)$. This (along with the other usual assumptions \textcolor{red}{how much detail is required here??}) gives the well known result:
 
 $$
 \hat{\boldsymbol{\beta}} \sim \mathcal{N}(\boldsymbol{\beta}, \sigma^2(X^TX)^{-1}).
 $$
-We let $\hat{\boldsymbol{\beta}} = [\hat{\beta}_0, \hat{\beta}_1, \hat{\beta}_2]^T$, where $\hat{\beta}_2$ estimates the effect of being a human (we also index from 0 in the design matrix). Now we want to perform the hypothesis test
+Now we want to perform the hypothesis test
 
 $$
 H_0: \beta_2 = 0 \quad \text{vs.} \quad H_1: \beta_2 > 0.
 $$
-Under $H_0$, we obtain that
+Under $H_0$, we obtain that (we also index from 0 in the design matrix)
 
 $$
 \frac{\hat{\beta}_2}{\sigma\sqrt{(X^TX)^{-1}_{2,2}}} \sim \mathcal{N}(0, 1).
