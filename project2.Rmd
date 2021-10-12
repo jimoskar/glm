@@ -1,7 +1,10 @@
 ---
 title: 'TMA4315: Project 2'
 author: "jototlan@stud.ntnu.no (10018), martigtu@stud.ntnu.no (10037)"
-output: pdf_document
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
 ---
 
 ```{r setup, include=FALSE}
@@ -79,3 +82,33 @@ p.val <- pt(T.stat, n - p, lower.tail = F)
 p.val
 ```
 The calculated p-value is `r p.val`, which suggest that...
+
+
+
+\newpage
+# Problem 2
+
+## a)
+
+In this problem we apply ordinal multinomial regression to data from Norway Chess 2021.
+
+```{r}
+df <- read.csv('data/Norway\ Chess\ 2021.csv')
+```
+
+The response variable $y_i$ is the outcome of the $i$'th match. This can be considered an ordered categorical variable
+$$
+  y_i =
+  \begin{cases}
+    1 &,\quad \text{white win} \\ 2 &, \quad \text{draw}\\ 3 &, \quad \text{black win}
+  \end{cases}
+$$
+which may depend on relative strength of different players, which player plays white and black and the type of game played. The response can be determined by an underlying latent variable $u_i$, where
+$$
+  u_i = x_i^T \boldsymbol{\beta} + \epsilon_i.
+$$
+The event $y_i = r$ occurs if $\theta_{r-1} < u_i \le \theta_{r}$, where
+$$
+  -\infty = \theta_0 < \theta_1 < \theta_2 < \theta_3 = \infty.
+$$
+This means that our model returns that white wins whenever $u_i \le \theta_1$, draw if $\theta_1 < u_i \le \theta_2$ and black win for $u_i > \theta_2$.
