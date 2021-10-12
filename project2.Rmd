@@ -88,7 +88,8 @@ The calculated p-value is `r p.val`, which suggest that...
 \newpage
 # Problem 2
 
-## a)
+
+## Assumptions
 
 In this problem we apply ordinal multinomial regression to data from Norway Chess 2021.
 
@@ -100,15 +101,58 @@ The response variable $y_i$ is the outcome of the $i$'th match. This can be cons
 $$
   y_i =
   \begin{cases}
-    1 &,\quad \text{white win} \\ 2 &, \quad \text{draw}\\ 3 &, \quad \text{black win}
+    1 &,\quad \text{white win} \\ 2 &, \quad \text{draw}\\ 3 &, \quad \text{black win},
   \end{cases}
 $$
-which may depend on relative strength of different players, which player plays white and black and the type of game played. The response can be determined by an underlying latent variable $u_i$, where
+which may depend on relative strength of different players, which player plays white and black and the type of game played. The response can be determined by an underlying latent variable $u_i$, given by
 $$
-  u_i = x_i^T \boldsymbol{\beta} + \epsilon_i.
+  u_i = -\boldsymbol{x}_i^T \boldsymbol{\beta} + \epsilon_i,
 $$
-The event $y_i = r$ occurs if $\theta_{r-1} < u_i \le \theta_{r}$, where
+where $\epsilon_i \overset{iid}\sim f$, where $f$ is some standard distribution with cdf $F$. In this model, the event $y_i = r$ occurs if $\theta_{r-1} < u_i \le \theta_{r}$ for some parameters $\{\theta_i\}_{i=0}^3$ satisfying
 $$
   -\infty = \theta_0 < \theta_1 < \theta_2 < \theta_3 = \infty.
 $$
-This means that our model returns that white wins whenever $u_i \le \theta_1$, draw if $\theta_1 < u_i \le \theta_2$ and black win for $u_i > \theta_2$.
+It follows that
+$$
+  \text P(y_i \le r) = \text P(u_i \le \theta_r) = \text P(\epsilon_i \le \theta_r + \boldsymbol{x}_i^T \boldsymbol{\beta}) = F(\theta_r + \boldsymbol{x}_i^T \boldsymbol{\beta}),
+$$
+so the probability of observing a particular outcome of the $i$'th match becomes
+$$
+  \begin{split}
+  \pi_{ir} = P(y_i = r) &= P(y_i \le r) - P(y_i \le r-1)\\
+  &= F(\theta_r + \boldsymbol{x}_i^T \boldsymbol{\beta}) - F(\theta_{r-1} + \boldsymbol{x}_i^T \boldsymbol{\beta}).
+  \end{split}
+$$
+This means that our model returns that white wins whenever $u_i \le \theta_1$, draw if $\theta_1 < u_i \le \theta_2$ and black win for $u_i > \theta_2$. 
+
+## Models
+
+### Propositional odds model / Cummulative Logit
+
+$$
+  F(x) = \frac{e^x}{1+e^x}, \qquad \epsilon_i \sim \text{Logistic}(0,\ 1)
+$$
+### Cummulative Probit
+
+$$
+  F(x) = \Phi(x), \qquad \epsilon_i \sim N(0,\ 1)
+$$
+### R
+
+```{r}
+library(VGAM)
+fit <- vglm(y ~ factor(white) + factor(black),
+            family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+
+# P(u <= theta_1), P(u <= theta_2)
+p.less_or_equal <- plogis(predict(fit, df))
+
+
+stats <- cbind('white'=df$white, 'black'=df$black,
+               'P(white)'=round(p.less_or_equal[,1],2),
+               'P(draw)'=round(p.less_or_equal[,2]-p.less_or_equal[,1],2),
+               'P(black)'=round(1-p.less_or_equal[,2],2),
+               'outcome'=c('white','draw','black')[df$y])
+stats
+```
+
