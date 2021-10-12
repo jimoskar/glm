@@ -37,7 +37,7 @@ mammals$is.human = as.factor(is.human)
 mod1 <- lm(log(brain) ~ log(body) + is.human, data = mammals)
 summary(mod1)
 ```
-Let $\hat{\boldsymbol{\beta}} = [\hat{\beta}_0, \hat{\beta}_1, \hat{\beta}_2]^T$ be the coefficient estimates given in the summary above. Then the estimated effect on brain mass from being a human is $\hat{\beta}_3 \approx$ `r mod1$coefficents[3]`.
+Let $\hat{\boldsymbol{\beta}} = [\hat{\beta}_0, \hat{\beta}_1, \hat{\beta}_2]^T$ be the coefficient estimates given in the summary above. Then the estimated effect on brain mass from being a human is $\hat{\beta}_2 \approx$ `r mod1$coefficients[3]`. Since we have used a log-transform on both the brain mass and body mass, humans will according to the model be larger by a factor of $e^{\hat{\beta}_2} =$ `r exp(mod1$coefficients[3])`.
 
 We use the notation $\boldsymbol{y} = X\boldsymbol{\beta} + \boldsymbol{\varepsilon}$ to represent the linear model. Here, $X$ is the $n \times p$ design matrix, where $n$ is the number of observations and $p$ is the number of parameters used in the model. As usual, $\boldsymbol{\varepsilon} \sim \mathcal{N}(\boldsymbol{0}, \sigma^2 I_n)$. This (along with the other usual assumptions \textcolor{red}{how much detail is required here??}) gives the well known result:
 
@@ -78,4 +78,18 @@ T.stat <- beta.2/(s*sqrt(XtX.inv[3,3]))
 p.val <- pt(T.stat, n - p, lower.tail = F)
 p.val
 ```
-The calculated p-value is `r p.val`, which suggest that...
+The calculated p-value is `r p.val`.
+
+## c)
+
+We now consider the linear model with only two parameters, $\beta_0$ and $\beta_1$. Let $Y_h = \beta_0 + \beta_1 x_h$ be the stochastic variable from which the log of the human brain mass is realized and $\widehat{Y}_h = \hat{\beta}_0 + \hat{\beta}_1x_h$ be the corresponding estimator. Then we can find the pivotal quantity
+
+$$
+T = \frac{Y_h - \widehat{Y}_h}{s\sqrt{1 + 1/n + \frac{(x_h - \bar{x})^2}{\sum_{i = 1}^n(x_i-\bar{x})^2}}} \sim t_{n -2}.
+$$
+We refer to the good old [\textcolor{blue}{subject-pages}](https://tma4245.math.ntnu.no) (simple linear regression/prediction and prediction intervals in simple linear regression) for this result. Thus, we can find the one-sided prediction interval:
+
+$$
+P(T \le U) = 1 - \alpha \implies U = t_{n-2, \alpha}.
+$$
+Since there are $n =$ `r n-1` rows in the dataset (excluding humans), the exact prediction interval is $(-\infty, t_{\text{`r n-1`}, \alpha})$
