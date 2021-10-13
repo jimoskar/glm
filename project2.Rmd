@@ -93,10 +93,85 @@ $$
 We refer to the good old [\textcolor{blue}{subject-pages}](https://tma4245.math.ntnu.no) (simple linear regression/prediction and prediction intervals in simple linear regression) for this result. Thus, we can find the one-sided prediction interval:
 
 $$
-P(T \le U) = 1 - \alpha \implies U = t_{n-2, \alpha}.
+P(T \le k) = 1 - \alpha \implies k = t_{n-2, \alpha}.
 $$
-Since there are $n =$ `r n-1` rows in the dataset (excluding humans), the exact prediction interval is $(-\infty, t_{\text{`r n-1`}, \alpha})$
+Rearranging, we arrive at
 
+$$
+P\left(Y_h \le t_{n-2, \alpha} \cdot s\sqrt{1 + 1/n + \frac{(x_h - \bar{x})^2}{\sum_{i = 1}^n(x_i-\bar{x})^2}} + \widehat{Y}_h \right) = 1 - \alpha
+$$
+We denote the right hand side of the inequality above by $U$ and calculate it with the observed values below
+```{r, eval = F}
+# HMMM trenegr ikke gjøre dette da egentlig?
+x.h <- mammals$body[mammals$species == "Human"]
+mammals.reduced <- mammals[mammals$species != "Human", ]
+mod0.reduced <- lm(log(brain) ~ log(body), data = mammals.reduced)
+summary(mod0.reduced)
+pred.h <- predict(mod0.reduced, newdata = data.fram('body' = x.h)
+s <- sqrt(deviance(mod0.reduced))
+x.bar <- mean(mammals.reduced$body)
+n <- nrow(mammals.reduced)
+alpha = 0.05
+
+U <- qt(1 - alpha, n) * s * sqrt(1 + 1/n + (x.h - x.bar)^2/sum((mammals.reduced$body - x.bar)^2) + pred.h
+                                
+```
+
+\textcolor{red}{very uncertain on this one.}
+
+d)
+For a gamma-distributed random variable, the pdf takes the form
+$$
+f(x\mid a,b) = \frac{b^a}{\Gamma(a)} x^{a-1}e^{-bx}.
+$$
+Using the parametrization $\mu = \frac{a}{b}$ and $\nu = a$, we construct the GLM with a log-link as follows. Let the mammalian brain size given body size be given as
+$$
+y_i \sim \mathrm{Gamma}(\mu_i, \nu),
+$$
+where 
+
+$$
+-\frac{1}{\mu_i} = \boldsymbol{x}_i^T \boldsymbol{\beta} =: \eta_i.
+$$
+Next, we fit the model:
+```{r}
+# log-link does not covnerge.
+mod.glm <- glm(brain ~ body, family = Gamma(link = "inverse"), data = mammals)
+summary(mod.glm)
+```
+
+## e)
+We want to test whether the following relationship holds:
+$$
+Y = Y_0M^{3/4},
+$$
+where $Y$ is the brain mass, $Y_0$ is a constant and $M$ is the brain mass. Since this is equivalent to testing
+
+$$
+\ln(Y) = \ln(Y_0) + \frac{3}{4}\ln(M),
+$$
+we can, for the model in (b), simply perform the hypothesis test:
+$$
+H_0: \beta_1 = \frac{3}{4} \quad \mathrm{vs.} \quad \beta_1 \ne \frac{3}{4}.
+$$
+We follow the standard framework for a linear hypothesis test:
+
+```{r}
+# Wald test:
+C <- matrix(c(0, 1, 0), nrow = 1)
+d <-  3/4
+r <- 1
+p <- 3
+n <-  nrow(mammals)
+beta1 <- mod1$coefficients[2]
+s2 <- deviance(mod1)
+
+F.stat <-  (beta1-3/4)^2/(s2*XtX.inv[2,2])
+p.val <- pf(F.stat, r, n - p, lower.tail = F)
+p.val
+
+```
+\textcolor{red}{How to use LRT test on linear hypothesis? very large p-value!} 
 
 \newpage
 # Problem 2
