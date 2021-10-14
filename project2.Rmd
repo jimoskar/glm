@@ -163,15 +163,41 @@ d <-  3/4
 r <- 1
 p <- 3
 n <-  nrow(mammals)
-beta1 <- mod1$coefficients[2]
-s2 <- deviance(mod1)
+beta1 <- mod0$coefficients[2]
+s2 <- deviance(mod0)
+X <- model.matrix( ~ log(body), data = mammals)
+XtX.inv <- solve(t(X) %*% X)
 
 F.stat <-  (beta1-3/4)^2/(s2*XtX.inv[2,2])
 p.val <- pf(F.stat, r, n - p, lower.tail = F)
 p.val
-
 ```
 \textcolor{red}{How to use LRT test on linear hypothesis? very large p-value!} 
+For a generalized linear model, the Wald statistic can be written as
+
+$$
+w =(C\hat{\boldsymbol{\beta}} - d)^T[CF^{-1}(\hat{\boldsymbol{\beta}})C^T]^{-1}(C\hat{\boldsymbol{\beta}} - d),
+$$
+which is asymptotically $\chi^2$-distributed with $r = \mathrm{rank}(C)$ degrees of freedom. We compute its value:
+```{r}
+beta <- as.vector(mod1$coefficients)
+denom <- solve(C %*% vcov(mod1) %*% t(C))
+w <- (C %*% beta - d)^2*denom
+
+p.val <- pchisq(w, r, lower.tail = F)
+p.val
+```
+
+We perform LRT tests by using an offset term. 
+```{r}
+
+mod0.o <- lm(log(brain) ~ 1, offset = 3/4*log(body), data = mammals) 
+anova(mod0.o, mod0, test= "Chisq")
+```
+
+
+# f)
+
 
 \newpage
 # Problem 2
