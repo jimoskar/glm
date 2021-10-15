@@ -65,7 +65,7 @@ $$
 where $s^2 = RSS/(n-p)$, we obtain the test statistic
 
 $$
-\frac{\hat{\beta}_2}{s\sqrt{(X^TX)^{-1}_{2,2}}} \sim t_{n-p},
+T_1 = \frac{\hat{\beta}_2}{s\sqrt{(X^TX)^{-1}_{2,2}}} \sim t_{n-p},
 $$
 under $H_0$. We perform the calculations in R:
 ```{r}
@@ -85,23 +85,31 @@ The calculated p-value is `r p.val`.
 
 ## c)
 
-We now consider the linear model with only two parameters, $\beta_0$ and $\beta_1$. Let $Y_h = \beta_0 + \beta_1 x_h$ be the stochastic variable from which the log of the human brain mass is realized and $\widehat{Y}_h = \hat{\beta}_0 + \hat{\beta}_1x_h$ be the corresponding estimator. Then we can find the pivotal quantity
+We now consider all non-human mammals and construct a one-sided prediction interval for the (log of) human brain size. Define $n' = n -1$ as the number of observations and let $Y_h = \beta_0 + \beta_1 x_h + \varepsilon_h$ be the stochastic variable from which the log of the human brain mass is realized and $\widehat{Y}_h = \hat{\beta}_0 + \hat{\beta}_1x_h$ be the corresponding estimator. Then we can find the pivotal quantity
 
 $$
-T = \frac{Y_h - \widehat{Y}_h}{s\sqrt{1 + 1/n + \frac{(x_h - \bar{x})^2}{\sum_{i = 1}^n(x_i-\bar{x})^2}}} \sim t_{n -2}.
+T_2 = \frac{Y_h - \widehat{Y}_h}{s\sqrt{1 + 1/n' + \frac{(x_h - \bar{x})^2}{\sum_{i = 1}^{n'}(x_i-\bar{x})^2}}} \sim t_{n' -2}.
 $$
 We refer to the good old [\textcolor{blue}{subject-pages}](https://tma4245.math.ntnu.no) (simple linear regression/prediction and prediction intervals in simple linear regression) for this result. Thus, we can find the one-sided prediction interval:
 
 $$
-P(T \le k) = 1 - \alpha \implies k = t_{n-2, \alpha}.
+P(T_2 \le k) = 1 - \alpha \implies k = t_{n'-2, \alpha}.
 $$
 Rearranging, we arrive at
 
 $$
 P\left(Y_h \le t_{n-2, \alpha} \cdot s\sqrt{1 + 1/n + \frac{(x_h - \bar{x})^2}{\sum_{i = 1}^n(x_i-\bar{x})^2}} + \widehat{Y}_h \right) = 1 - \alpha
 $$
-We denote the right hand side of the inequality above by $U$ and calculate it with the observed values below
-```{r, eval = F}
+We denote the right hand side of the inequality above by $U$ and in accordance with the task description define
+
+$$
+A = \{Y_h > U\}, \quad \text{and} \quad B = \{ T_1 > t_{n-p, \alpha}\}
+$$
+We now observe that $A$ is equivalent to $\{T_2 > t_{n'-2, \alpha}\} = \{T_2 > t_{n-p, \alpha}\}$, where $p = 3$ as before. This shows that $A$ and $B$ are equivalent.
+
+\textcolor{red}{I do not use the profile likelihodd though?}
+
+```{r, eval = F, echo = F}
 # HMMM trenegr ikke gjøre dette da egentlig?
 x.h <- mammals$body[mammals$species == "Human"]
 mammals.reduced <- mammals[mammals$species != "Human", ]
@@ -117,9 +125,9 @@ U <- qt(1 - alpha, n) * s * sqrt(1 + 1/n + (x.h - x.bar)^2/sum((mammals.reduced$
                                 
 ```
 
-\textcolor{red}{very uncertain on this one.}
 
-d)
+
+## d)
 For a gamma-distributed random variable, the pdf takes the form
 $$
 f(x\mid a,b) = \frac{b^a}{\Gamma(a)} x^{a-1}e^{-bx}.
