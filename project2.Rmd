@@ -135,8 +135,7 @@ $$
 $$
 Next, we fit the model:
 ```{r}
-# log-link does not covnerge.
-mod.glm <- glm(brain ~ body, family = Gamma(link = "inverse"), data = mammals)
+mod.glm <- glm(brain ~ log(body) + is.human, family = Gamma(link = "log"), data = mammals)
 summary(mod.glm)
 ```
 
