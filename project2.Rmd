@@ -244,13 +244,7 @@ sample.skew
 
 ## Assumptions
 
-In this problem we apply ordinal multinomial regression to data from Norway Chess 2021.
-
-```{r}
-df <- read.csv('data/Norway\ Chess\ 2021.csv')
-```
-
-The response variable $y_i$ is the outcome of the $i$'th match. This can be considered an ordered categorical variable
+In this problem we apply ordinal multinomial regression to data from Norway Chess 2021. The response variable $y_i$ is the outcome of the $i$'th match. This can be considered an ordered categorical variable
 $$
   y_i =
   \begin{cases}
@@ -290,12 +284,22 @@ $$
 $$
   F(x) = \Phi(x), \qquad \epsilon_i \sim N(0,\ 1)
 $$
-### R
+First we consider the model where 
+$$
+u_i = -(\alpha_{j(i)} + \beta_{l(i)} ) + \varepsilon_i,
+$$
+where $\alpha_{j(i)}$ is the effect of player $j(i)$ having white pieces, and $\beta_{l(i)}$ is the effect of player $l(i)$ having black pieces.
 
 ```{r}
+df <- read.csv('data/Norway\ Chess\ 2021.csv')
+
 library(VGAM)
+head(df)
+
+
 fit <- vglm(y ~ factor(white) + factor(black),
             family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+AIC(fit)
 
 # P(u <= theta_1), P(u <= theta_2)
 p.less_or_equal <- plogis(predict(fit, df))
@@ -307,5 +311,38 @@ stats <- cbind('white'=df$white, 'black'=df$black,
                'P(black)'=round(1-p.less_or_equal[,2],2),
                'outcome'=c('white','draw','black')[df$y])
 stats
+```
+
+Since it could be argued that a given players skills with one color should be proportional or equal to the skills with another color, we next consider the model where $\alpha_j = \beta_j, \quad j = 1,2,\ldots, k$. The model becomes
+
+$$
+u_i = -(\alpha_{j(i)} - \alpha_{l(i)} ) + \varepsilon_i.
+$$
+\textcolor{red}{Need to drop one column from the design matrix in order to get full rank. Why?}
+```{r}
+library(Matrix)
+# The 'simpler' model from the lecture (effect of player being white is equal when being black)
+df$black = as.factor(df$black)
+df$white = as.factor(df$white)
+X = data.frame(matrix(0, nrow(df), nlevels(df$black)))
+colnames(X) <- levels(df$black)
+for(i in 1:nrow(df)){
+  black = as.character(df$black[i])
+  white = as.character(df$white[i])
+  X[i,black] = 1
+  X[i, white] = -1
+}
+rankMatrix((X))
+ncol(X)
+# X does not have full rank.
+
+X$type = df$type
+X$type = as.factor(X$type)
+X$y = df$y
+
+fit.simple <- vglm(y ~ ., family=cumulative(parallel = TRUE, link="logitlink"), data=X[2:ncol(X)])
+summary(fit.simple)
+AIC(fit.simple)
+
 ```
 
