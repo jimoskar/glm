@@ -115,9 +115,9 @@ It can also be shown that
 $$
 (X^TX)^{-1}_{2,2} = 1 + 1/n' + \frac{(x_h - \bar{x})^2}{\sum_{i = 1}^{n'}(x_i-\bar{x})^2},
 $$
-which shows that $T_1 = T_2$ and ehnce $A$ and $B$ are equivalent.
+which shows that $T_1 = T_2$ and hence $A$ and $B$ are equivalent.
 
-\textcolor{red}{Remains to show the above! I have not succeeded yet:()}
+\textcolor{red}{Do not necessarily need to show that they are equal, only argue why they are equivalent.}
 
 ```{r, eval = F, echo = F}
 # HMMM trenegr ikke gjøre dette da egentlig?
@@ -178,11 +178,11 @@ We follow the standard framework for a linear hypothesis test:
 C <- matrix(c(0, 1, 0), nrow = 1)
 d <-  3/4
 r <- 1
-p <- 3
+p <- 2
 n <-  nrow(mammals)
-beta1 <- mod1$coefficients[2]
-s2 <- deviance(mod1)
-X <- model.matrix( ~ log(body) + is.human, data = mammals)
+beta1 <- mod0$coefficients[2]
+s2 <- deviance(mod0)
+X <- model.matrix(mod0)
 XtX.inv <- solve(t(X) %*% X)
 
 F.stat <-  (beta1-3/4)^2/(s2*XtX.inv[2,2])
@@ -190,7 +190,7 @@ p.val <- pf(F.stat, r, n - p, lower.tail = F)
 p.val
 ```
 
-For a generalized linear model, the Wald statistic can be written as
+\textcolor{red}{get wrong p-value??} For a generalized linear model, the Wald statistic can be written as
 
 $$
 w =(C\hat{\boldsymbol{\beta}} - d)^T[CF^{-1}(\hat{\boldsymbol{\beta}})C^T]^{-1}(C\hat{\boldsymbol{\beta}} - d),
@@ -215,7 +215,7 @@ Then we cosider the GLM
 mod.gamma.offset <- glm(brain ~ 1 + is.human, family = Gamma(link = "log"), offset = 3/4*log(body), data = mammals) 
 anova(mod.gamma.offset, mod.gamma, test= "Chisq")
 ```
-We see that the Wald test and the LRT test differ the most for the linear model. This could be explained by the fact that the Wald test for the lienar model is exact (the test statistic follows an $F$-distribution), while in the LRT test we use an asymptotic distribution. \textcolor{red}{unsure here.}
+We see that the Wald test and the LRT test differ the most for the linear model. This could be explained by the fact that the Wald test for the lienar model is exact (the test statistic follows an $F$-distribution), while in the LRT test we use an asymptotic distribution. \textcolor{red}{This is wrong. (Right now the p-values are wrong too for some reason..) For one of the models, the LRT and Wald test are equivalent, while not for the other. We need to show this.}
 
 # f)
 We calculate the AIC:
@@ -226,7 +226,7 @@ AIC.gamma <- 2*p + 2*logLik(mod.gamma)
 AIC.linear
 AIC.gamma
 ```
-We need to be careful comparing these, because the models have different distributional assumptions. \textcolor{red}{something else maybe?}
+We need to be careful comparing these, because the models have different distributional assumptions. \textcolor{red}{something else maybe? No. It is beceause Y ~ Gamma in one and log(Y) ~ Normal in the other. Need to consider a transformation, e.g. Jacobi transformation?}
 
 The sample skewness can be found as
 ```{r}
@@ -318,7 +318,7 @@ Since it could be argued that a given players skills with one color should be pr
 $$
 u_i = -(\alpha_{j(i)} - \alpha_{l(i)} ) + \varepsilon_i.
 $$
-\textcolor{red}{Need to drop one column from the design matrix in order to get full rank. Why?}
+\textcolor{red}{Need to drop one column from the design matrix in order to get full rank. Why? Silus says you can imagine that one effect dissapears into the intercept...}
 ```{r}
 library(Matrix)
 # The 'simpler' model from the lecture (effect of player being white is equal when being black)
