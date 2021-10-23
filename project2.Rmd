@@ -105,19 +105,27 @@ We denote the right hand side of the inequality above by $U$ and in accordance w
 $$
 A = \{Y_h > U\}, \quad \text{and} \quad B = \{ T_1 > t_{n-p, \alpha}\}
 $$
-We now observe that $A$ is equivalent to $\{T_2 > t_{n'-2, \alpha}\} = \{T_2 > t_{n-p, \alpha}\}$, where $p = 3$ as before. To show that $A$ and $B$ are equivalent, we need to show that $T_1 = T_2$ Using profile log-likelihood, it can be shown that
+We now observe that $A$ is equivalent to $\{T_2 > t_{n'-2, \alpha}\} = \{T_2 > t_{n-p, \alpha}\}$, where $p = 3$ as before. To show that $A$ and $B$ are equivalent, we find the MLSE of $\beta_2$ from the model in b) by considering the profile log-likelihood:
 
+$$
+\begin{split}
+l_p(\beta_1,\beta_2) &= \sup_{\beta_2}\ln\left[ \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi}\sigma}  e^{-\frac{1}{2}\left(\frac{y_i-\boldsymbol{x}_i^T\boldsymbol{\beta}}{\sigma}\right)^2}\right] \\
+&= \sup_{\beta_2} \left[ n\ln\left(\frac{1}{\sqrt{2\pi}\sigma}\right) - \frac{1}{2\sigma^2}\sum_{i = 1}^n (y_i-\boldsymbol{x}_i^T\boldsymbol{\beta})^2\right].
+\end{split}
+$$
+Since $x_{i,2}$ (the third row of vector $\boldsymbol{x}_i$) is nonzero for only one term in the sum above, say for  $i = h$, we only need to consider one term. That is, the term with $\boldsymbol{x}_h := [1, x_h, 1]^T$. We also neglect the factor in front since it must be positive. We are left to take the supremum of:
+
+$$
+\sup_{\beta_2}-(y_h - \beta_0 - \beta_1x_h - \beta_2)^2,
+$$
+which means that $\beta_2 = y_h - \beta_0 - \beta_1x_h$. Due to the invariance of MLEs, we now know that
 $$
 \hat{\beta}_2 = Y_h - \hat{\beta}_0 - \hat{\beta_1}x_h = Y_h - \widehat{Y}_h.
 $$
-It can also be shown that 
+We also note that the estimators $\hat{\beta}_0$ and $\hat{\beta}_1$ are the same here as in the case where we do not consider humans (since the term involving $\boldsymbol{x}_h$ in the log-likelihood evaluates to zero). Thus, since both $T_1, T_2 \propto \hat{\beta}_2$, i.e both $A$ and $B$ occur when the difference $Y_h - \widehat{Y}_h$ is large, we can conclude that they are equivalent. 
 
-$$
-(X^TX)^{-1}_{2,2} = 1 + 1/n' + \frac{(x_h - \bar{x})^2}{\sum_{i = 1}^{n'}(x_i-\bar{x})^2},
-$$
-which shows that $T_1 = T_2$ and hence $A$ and $B$ are equivalent.
 
-\textcolor{red}{Do not necessarily need to show that they are equal, only argue why they are equivalent.}
+\textcolor{red}{More precise than this?}
 
 ```{r, eval = F, echo = F}
 # HMMM trenegr ikke gjøre dette da egentlig?
