@@ -38,7 +38,6 @@ is.human = ifelse(mammals$species == "Human", 1, 0)
 mammals$is.human = as.factor(is.human)
 
 mod1 <- lm(log(brain) ~ log(body) + is.human, data = mammals)
-summary(mod1)
 ```
 Let $\hat{\boldsymbol{\beta}} = [\hat{\beta}_0, \hat{\beta}_1, \hat{\beta}_2]^T$ be the coefficient estimates given in the summary above. Then the estimated effect on brain mass from being a human is $\hat{\beta}_2 \approx$ `r mod1$coefficients[3]`. Since we have used a log-transform on both the brain mass and body mass, humans will according to the model be larger by a factor of $e^{\hat{\beta}_2} =$ `r exp(mod1$coefficients[3])`.
 
@@ -124,26 +123,7 @@ $$
 $$
 We also note that the estimators $\hat{\beta}_0$ and $\hat{\beta}_1$ are the same here as in the case where we do not consider humans (since the term involving $\boldsymbol{x}_h$ in the log-likelihood evaluates to zero). Thus, since both $T_1, T_2 \propto \hat{\beta}_2$, i.e both $A$ and $B$ occur when the difference $Y_h - \widehat{Y}_h$ is large, we can conclude that they are equivalent. 
 
-
 \textcolor{red}{More precise than this?}
-
-```{r, eval = F, echo = F}
-# HMMM trenegr ikke gjøre dette da egentlig?
-x.h <- mammals$body[mammals$species == "Human"]
-mammals.reduced <- mammals[mammals$species != "Human", ]
-mod0.reduced <- lm(log(brain) ~ log(body), data = mammals.reduced)
-summary(mod0.reduced)
-pred.h <- predict(mod0.reduced, newdata = data.fram('body' = x.h)
-s <- sqrt(deviance(mod0.reduced))
-x.bar <- mean(mammals.reduced$body)
-n <- nrow(mammals.reduced)
-alpha = 0.05
-
-U <- qt(1 - alpha, n) * s * sqrt(1 + 1/n + (x.h - x.bar)^2/sum((mammals.reduced$body - x.bar)^2) + pred.h
-                                
-```
-
-
 
 ## d)
 For a gamma-distributed random variable, the pdf takes the form
@@ -186,11 +166,11 @@ We follow the standard framework for a linear hypothesis test:
 C <- matrix(c(0, 1, 0), nrow = 1)
 d <-  3/4
 r <- 1
-p <- 2
+p <- 3
 n <-  nrow(mammals)
-beta1 <- mod0$coefficients[2]
-s2 <- deviance(mod0)
-X <- model.matrix(mod0)
+beta1 <- mod1$coefficients[2]
+s2 <- deviance(mod1)
+X <- model.matrix(mod1)
 XtX.inv <- solve(t(X) %*% X)
 
 F.stat <-  (beta1-3/4)^2/(s2*XtX.inv[2,2])
@@ -226,10 +206,20 @@ anova(mod.gamma.offset, mod.gamma, test= "Chisq")
 We see that the Wald test and the LRT test differ the most for the linear model. This could be explained by the fact that the Wald test for the lienar model is exact (the test statistic follows an $F$-distribution), while in the LRT test we use an asymptotic distribution. \textcolor{red}{This is wrong. (Right now the p-values are wrong too for some reason..) For one of the models, the LRT and Wald test are equivalent, while not for the other. We need to show this.}
 
 # f)
-We calculate the AIC:
+We need to be careful comparing the log-likelihoods and hence the AICs of the models, because for the GLM we consider $Y \sim \mathrm{Gamma}$, while in the linear model we consider $\ln Y\sim \mathrm{Normal}$. To make them comparable, we define $X:= \ln(Y)$. Then (for the linear model) $Y = e^X$ and the Jacobian transformation yields a density of
+
+$$
+f_Y(y) = \left|\frac{\partial x}{\partial y}\right| f_X(x) = \frac{1}{y}f_X(x).
+$$
+This then yields a log-likelihood:
+
+$$
+l_Y(\boldsymbol{\beta}) = l_X(\boldsymbol{\beta}) -\sum_{i = 1}^n \ln y_i,
+$$
+where  $l_X(\boldsymbol{\beta})$ is the log-likelihood of the original linear model. We implement this 'correction' in the calculation of AIC below: 
 ```{r}
 p = 3
-AIC.linear <- 2*p + 2*logLik(mod1)
+AIC.linear <- 2*p + 2*logLik(mod1) - sum(log(mammals$brain))
 AIC.gamma <- 2*p + 2*logLik(mod.gamma)
 AIC.linear
 AIC.gamma
