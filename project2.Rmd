@@ -20,26 +20,28 @@ mammals <- read.table(
 
 ## a)
 ```{r}
-plot(log(mammals$body), log(mammals$brain)) # Seems pretty linear.
+plot(log(mammals$body), log(mammals$brain))
 ```
 
 
-A log-log plot of the brain mass against body mass seems to reveal a linear trend. We thus fit the following model:
+The log-log plot of the brain mass against body mass seems to reveal a linear trend. We thus fit the following model:
 
 ```{r}
 mod0 <- lm(log(brain) ~ log(body), data = mammals)
 summary(mod0)
 ```
 
+This shows that assuming $\ln(brain) = \beta_0 + \beta_1 \ln(body)$ suggest $brain \propto body^{\beta_1}$ with $\beta_1 \approx$ `r mod0$coefficients[2]`.
+
 ## b)
 
 ```{r}
-is.human = ifelse(mammals$species == "Human", 1, 0)
-mammals$is.human = as.factor(is.human)
+mammals$is.human = as.factor(mammals$species == "Human")
 
 mod1 <- lm(log(brain) ~ log(body) + is.human, data = mammals)
+summary(mod1)
 ```
-Let $\hat{\boldsymbol{\beta}} = [\hat{\beta}_0, \hat{\beta}_1, \hat{\beta}_2]^T$ be the coefficient estimates given in the summary above. Then the estimated effect on brain mass from being a human is $\hat{\beta}_2 \approx$ `r mod1$coefficients[3]`. Since we have used a log-transform on both the brain mass and body mass, humans will according to the model be larger by a factor of $e^{\hat{\beta}_2} =$ `r exp(mod1$coefficients[3])`.
+Let $\hat{\boldsymbol{\beta}} = \begin{bmatrix}\hat{\beta}_0 & \hat{\beta}_1 & \hat{\beta}_2\end{bmatrix}^T$ be the coefficient estimates given in the summary above. Then the estimated effect on brain mass from being a human is $\hat{\beta}_2 \approx$ `r mod1$coefficients[3]`. Since we have used a log-transform on both the brain mass and body mass, humans will according to the model be larger by a factor of $e^{\hat{\beta}_2} =$ `r exp(mod1$coefficients[3])`.
 
 We use the notation $\boldsymbol{y} = X\boldsymbol{\beta} + \boldsymbol{\varepsilon}$ to represent the linear model. Here, $X$ is the $n \times p$ design matrix, where $n$ is the number of observations and $p$ is the number of parameters used in the model. As usual, $\boldsymbol{\varepsilon} \sim \mathcal{N}(\boldsymbol{0}, \sigma^2 I_n)$. This (along with the other usual assumptions \textcolor{red}{how much detail is required here??}) gives the well known result:
 
@@ -70,14 +72,14 @@ under $H_0$. We perform the calculations in R:
 ```{r}
 n <- nrow(mammals)
 p <- 3
-beta.2 <- mod1$coefficients[3]
+beta.2.hat <- mod1$coefficients[3]
 s <- sqrt(deviance(mod1)/(n-p))
 X <- model.matrix( ~ log(body) + is.human, data = mammals)
 XtX.inv <- solve(t(X) %*% X)
 
 
-T.stat <- beta.2/(s*sqrt(XtX.inv[3,3]))
-p.val <- pt(T.stat, n - p, lower.tail = F)
+T.1 <- beta.2.hat/(s*sqrt(XtX.inv[3,3]))
+p.val <- pt(T.1, n - p, lower.tail = F)
 p.val
 ```
 The calculated p-value is `r p.val`.
@@ -92,31 +94,33 @@ $$
 We refer to the good old [\textcolor{blue}{subject-pages}](https://tma4245.math.ntnu.no) (simple linear regression/prediction and prediction intervals in simple linear regression) for this result. Thus, we can find the one-sided prediction interval:
 
 $$
-P(T_2 \le k) = 1 - \alpha \implies k = t_{n'-2, \alpha}.
+P(T_2 < k) = 1 - \alpha \implies k = t_{n'-2,\ \alpha}.
 $$
 Rearranging, we arrive at
 
 $$
-P\left(Y_h \le t_{n-2, \alpha} \cdot s\sqrt{1 + 1/n + \frac{(x_h - \bar{x})^2}{\sum_{i = 1}^n(x_i-\bar{x})^2}} + \widehat{Y}_h \right) = 1 - \alpha
+P\left(Y_h < \underbrace{t_{n'-2,\ \alpha} \cdot s\sqrt{1 + 1/n' + \frac{(x_h - \bar{x})^2}{\sum_{i = 1}^n(x_i-\bar{x})^2}} + \widehat{Y}_h}_{=\ U} \right) = 1 - \alpha
 $$
 We denote the right hand side of the inequality above by $U$ and in accordance with the task description define
 
 $$
-A = \{Y_h > U\}, \quad \text{and} \quad B = \{ T_1 > t_{n-p, \alpha}\}
+A = \{Y_h \notin (-\infty,\ U)\} = \{Y_h \ge U\}, \quad \text{and} \quad B = \{ T_1 \ge t_{n-p,\ \alpha}\}
 $$
-We now observe that $A$ is equivalent to $\{T_2 > t_{n'-2, \alpha}\} = \{T_2 > t_{n-p, \alpha}\}$, where $p = 3$ as before. To show that $A$ and $B$ are equivalent, we find the MLSE of $\beta_2$ from the model in b) by considering the profile log-likelihood:
-
+We now observe that $A$ is equivalent to $\{T_2 \ge t_{n'-2,\ \alpha}\} = \{T_2 \ge t_{n-p,\ \alpha}\}$, where $p = 3$ as before. To show that $A$ and $B$ are equivalent, we find the MLE of $\beta_2$ from the model in b) by considering the profile log-likelihood:
 $$
 \begin{split}
-l_p(\beta_1,\beta_2) &= \sup_{\beta_2}\ln\left[ \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi}\sigma}  e^{-\frac{1}{2}\left(\frac{y_i-\boldsymbol{x}_i^T\boldsymbol{\beta}}{\sigma}\right)^2}\right] \\
-&= \sup_{\beta_2} \left[ n\ln\left(\frac{1}{\sqrt{2\pi}\sigma}\right) - \frac{1}{2\sigma^2}\sum_{i = 1}^n (y_i-\boldsymbol{x}_i^T\boldsymbol{\beta})^2\right].
+l_p(\beta_0,\beta_1) &= \sup_{\beta_2} l(\beta_0,\beta_1, \beta_2)\\
+&= \sup_{\beta_2}\ln\left( \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi}\sigma}  e^{-\frac{1}{2}\left(\frac{y_i-\boldsymbol{x}_i^T\boldsymbol{\beta}}{\sigma}\right)^2}\right) \\
+&= \sup_{\beta_2} \left( n\ln\left(\frac{1}{\sqrt{2\pi}\sigma}\right) - \frac{1}{2\sigma^2}\sum_{i = 1}^n (y_i-\boldsymbol{x}_i^T\boldsymbol{\beta})^2\right)\\
+&= \sup_{\beta_2} \left( n\ln\left(\frac{1}{\sqrt{2\pi}\sigma}\right) - \frac{1}{2\sigma^2}\sum_{\begin{matrix}i=1\\i\ne h\end{matrix}}^n (y_i-\boldsymbol{x}_i^T\boldsymbol{\beta})^2- \frac{1}{2\sigma^2} (y_h-\boldsymbol{x}_h^T\boldsymbol{\beta})^2\right).
 \end{split}
 $$
-Since $x_{i,2}$ (the third row of vector $\boldsymbol{x}_i$) is nonzero for only one term in the sum above, say for  $i = h$, we only need to consider one term. That is, the term with $\boldsymbol{x}_h := [1, x_h, 1]^T$. We also neglect the factor in front since it must be positive. We are left to take the supremum of:
+Since $x_{i,2}$ is nonzero for only one term in the sum above, say for  $i = h$, we only need to consider this term. That is, the term with $\boldsymbol{x}_h := \begin{bmatrix}1 & x_h & 1\end{bmatrix}^T$. The constant in front of $(y_h-\boldsymbol{x}_h^T\boldsymbol{\beta})^2$ is negative, so the supremum is when this is equal to zero. Thus,
 
 $$
-\sup_{\beta_2}-(y_h - \beta_0 - \beta_1x_h - \beta_2)^2,
+(y_h-\boldsymbol{x}_h^T\boldsymbol{\beta})^2 = 0 \quad \implies \quad y_h - \beta_0 - \beta_1 x_h - \beta_2 = 0,
 $$
+
 which means that $\beta_2 = y_h - \beta_0 - \beta_1x_h$. Due to the invariance of MLEs, we now know that
 $$
 \hat{\beta}_2 = Y_h - \hat{\beta}_0 - \hat{\beta_1}x_h = Y_h - \widehat{Y}_h.
