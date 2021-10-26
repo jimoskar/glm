@@ -115,7 +115,7 @@ l_p(\beta_0,\beta_1) &= \sup_{\beta_2} l(\beta_0,\beta_1, \beta_2)\\
 &= \sup_{\beta_2} \left( n\ln\left(\frac{1}{\sqrt{2\pi}\sigma}\right) - \frac{1}{2\sigma^2}\sum_{\begin{matrix}i=1\\i\ne h\end{matrix}}^n (y_i-\boldsymbol{x}_i^T\boldsymbol{\beta})^2- \frac{1}{2\sigma^2} (y_h-\boldsymbol{x}_h^T\boldsymbol{\beta})^2\right).
 \end{split}
 $$
-Since $x_{i,2}$ is nonzero for only one term in the sum above, say for  $i = h$, we only need to consider this term. That is, the term with $\boldsymbol{x}_h := \begin{bmatrix}1 & x_h & 1\end{bmatrix}^T$. The constant in front of $(y_h-\boldsymbol{x}_h^T\boldsymbol{\beta})^2$ is negative, so the supremum is when this is equal to zero. Thus,
+Since $x_{i,2}$ is nonzero for only one term in the sum above, say for  $i = h$, we only need to consider this term. That is, the term with $\boldsymbol{x}_h := \begin{bmatrix}1 & x_h & 1\end{bmatrix}^T$. The constant in front of $(y_h-\boldsymbol{x}_h^T\boldsymbol{\beta})^2$ is negative, so the supremum is attained when this is equal to zero. Thus,
 
 $$
 (y_h-\boldsymbol{x}_h^T\boldsymbol{\beta})^2 = 0 \quad \implies \quad y_h - \beta_0 - \beta_1 x_h - \beta_2 = 0,
@@ -125,29 +125,29 @@ which means that $\beta_2 = y_h - \beta_0 - \beta_1x_h$. Due to the invariance o
 $$
 \hat{\beta}_2 = Y_h - \hat{\beta}_0 - \hat{\beta_1}x_h = Y_h - \widehat{Y}_h.
 $$
-We also note that the estimators $\hat{\beta}_0$ and $\hat{\beta}_1$ are the same here as in the case where we do not consider humans (since the term involving $\boldsymbol{x}_h$ in the log-likelihood evaluates to zero). Thus, since both $T_1, T_2 \propto \hat{\beta}_2$, i.e both $A$ and $B$ occur when the difference $Y_h - \widehat{Y}_h$ is large, we can conclude that they are equivalent. 
+We also note that the estimators $\hat{\beta}_0$ and $\hat{\beta}_1$ are the same here as in the case where we do not consider humans (since the term involving $\boldsymbol{x}_h$ in the log-likelihood evaluates to zero). Thus, since both $T_1, T_2 \propto \hat{\beta}_2$, i.e. both $A$ and $B$ occur when the difference $Y_h - \widehat{Y}_h$ is large, we can conclude that they are equivalent. 
 
 \textcolor{red}{More precise than this?}
 
 ## d)
 For a gamma-distributed random variable, the pdf takes the form
 $$
-f(x\mid a,b) = \frac{b^a}{\Gamma(a)} x^{a-1}e^{-bx}.
+f(x; a,b) = \frac{b^a}{\Gamma(a)} x^{a-1}e^{-bx}.
 $$
 Using the parametrization $\mu = \frac{a}{b}$ and $\nu = a$, we construct the GLM with a log-link as follows. Let the mammalian brain size given body size be given as
 $$
-y_i \sim \mathrm{Gamma}(\mu_i, \nu),
+Y_i \sim \mathrm{Gamma}(\mu_i,\ \nu_i),
 $$
-where 
-
+with $\text{E}[Y_i] = \mu_i$, such that
 $$
-\ln(\mu_i) = \boldsymbol{x}_i^T \boldsymbol{\beta} =: \eta_i.
+\ln(\mu_i) = \eta_i = \boldsymbol{x}_i^T \boldsymbol{\beta}.
 $$
 Next, we fit the model (note that we use the logarithm of the body mass):
 ```{r}
 mod.gamma <- glm(brain ~ log(body) + is.human, family = Gamma(link = "log"), data = mammals)
 summary(mod.gamma)
 ```
+
 
 ## e)
 We want to test whether the following relationship holds:
@@ -228,16 +228,81 @@ AIC.gamma <- 2*p + 2*logLik(mod.gamma)
 AIC.linear
 AIC.gamma
 ```
-We need to be careful comparing these, because the models have different distributional assumptions. \textcolor{red}{something else maybe? No. It is beceause Y ~ Gamma in one and log(Y) ~ Normal in the other. Need to consider a transformation, e.g. Jacobi transformation?}
 
-The sample skewness can be found as
+### Teoretical skew of log of gamma distribution:
+
+Let $Y$ be gamma distributed with shape parameter $a$ and rate paramter $b$.
+The moment generating function for $\ln Y$ is
+$$
+    M_{\ln Y}(t) = \text{E}[e^{t \ln Y}] = \text{E}[Y^t],
+$$
+where the expectation can be calculated as
+$$
+\begin{split}
+    \text{E}[Y^t] &= \int_0^\infty \frac{b^a}{\Gamma(a)} y^{t+a-1} e^{-b y}\ \text{d}y \\
+    &= \frac{b^a}{\Gamma(a)} \int_0^\infty y^{t+a-1} e^{-b y}\ \text{d}y \\
+    &= \frac{b^a}{\Gamma(a)} \int_0^\infty \left(\frac{\xi}{b}\right)^{t+a-1} e^{-\xi}\ \frac{\text{d}\xi}{b} \\
+    &= \frac{b^{-t}}{\Gamma(a)} \int_0^\infty \xi^{t+a-1} e^{-\xi}\ \text{d}\xi \\
+    &= \frac{b^{-t}}{\Gamma(a)}\ \Gamma(t+a),
+\end{split}
+$$
+where we used the substitution $\xi = by$. The cumulant-generating function is defined as the log of the moment generating function, $K(t) := \ln M(t)$, so it follows that
+$$
+    K_{\ln Y}(t) = \ln M_{\ln Y}(t) = - t \ln b + \ln \Gamma(t+a) - \ln \Gamma(a).
+$$
+The first cumulat is $K_{\ln Y}^{(1)}(0) = \dfrac{\text{d} K_{\ln Y}(t)}{\text{d} t}\Big|_{t=0} = - \ln b + \psi(a)$, where $\psi^{(0)}(x) = \frac{\Gamma'(x)}{\Gamma(x)}$ is the digamma function. The subsequent cumulants can be derived using the polygamma functions. Recall that
+the polygamma function of order $m$ is defined as
+$$
+    \psi^{(m)}(x) = \frac{\text{d}^{m+1} }{\text{d} x^{m+1}} \ln \Gamma (x),
+$$
+so the subsequent cumulants are $K_{\ln Y}^{(n)}(t) = \psi^{(n-1)}(a)$ for $n\ge 2$.
+
+The skew of a random variable $X$ with mean $\mu$ and variance $\sigma$ is defined as
+$$
+    \text{Skew}[X] := \text{E}\left[\left(\frac{X-\mu}{\sigma}\right)^3\right],
+$$
+so it follows that 
+$$
+    \text{Skew}[\ln Y] = \frac{\text{E}\left[\left(\ln Y -\text{E}[\ln Y]\right)^3\right]}{\left(\text{Var}({\ln Y})\right)^{3/2}},
+$$
+
+where the numerator is the third central moment, equal to the third cumulant and the variance is equal to the second cumulant. Thus the skew of the log of the gamma distribution is
+$$
+    \text{Skew}[\ln Y] = \frac{\psi^{(2)}(a)}{\left(\psi^{(1)}(a)\right)^{3/2}}.
+$$
+In R, GLM with gamma-distribution assumes the shape parameter $a$ to be constant. To satisfy this condition, a dispersion parameter $\phi := \frac1a$ is introduced, which can be found in the summary. The polygamma functions are calculated using the pracma-library.
+
 ```{r}
+library(pracma)
+
+phi <- summary(mod.gamma)$dispersion
+a <- 1/phi
+
+theory.skew <- psi(2,a) / (psi(1,a))^(3/2)
+theory.skew
+```
+This gives the estimate for the skew of the log mammalian brain size given the body size as `r theory.skew`.
+
+
+### Sample skew of residuals from the LM in a:
+
+The sample skew is defined as
+$$
+  \text{Sample skew} := \frac{\frac1n \sum_{i=1}^{n}\left(x_i-\bar x\right)^3}{\left[\frac1{n-1} \sum_{i=1}^{n}\left(x_i-\bar x\right)^2\right]^{3/2}}.
+$$
+For the linear model fitted in a), we calculate the sample skew of the residuals:
+```{r}
+# residuals from LM in a)
 x <- residuals(mod1)
-s <- sd(x)
-m.3 <- mean(sum(x - mean(x)))
+
+m.3 <- 1/length(x)*sum((x - mean(x))^3)
+s <- sd(x) # = sqrt(1/(length(x)-1) * sum((x-mean(x))^2)) 
+
 sample.skew <- m.3/s^3
 sample.skew
 ```
+
+\textcolor{red}{How does the skew of the log mammalian brain size compare to the sample skew of the residuals of the LM? - The first is negativly skewed, while the residuals are positivly skewed, soo ...}
 
 
 \newpage
