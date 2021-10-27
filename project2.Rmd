@@ -243,9 +243,9 @@ AIC.linear
 AIC.gamma
 ```
 
-### Teoretical skew of log of gamma distribution:
+### Theoretical skew of log of gamma distribution:
 
-Let $Y$ be gamma distributed with shape parameter $a$ and rate paramter $b$.
+Let $Y$ be gamma distributed with shape parameter $a$ and rate parameter $b$.
 The moment generating function for $\ln Y$ is
 $$
     M_{\ln Y}(t) = \text{E}[e^{t \ln Y}] = \text{E}[Y^t],
@@ -284,7 +284,7 @@ where the numerator is the third central moment, equal to the third cumulant and
 $$
     \text{Skew}[\ln Y] = \frac{\psi^{(2)}(a)}{\left(\psi^{(1)}(a)\right)^{3/2}}.
 $$
-In R, GLM with gamma-distribution assumes the shape parameter $a$ to be constant. To satisfy this condition, a dispersion parameter $\phi := \frac1a$ is introduced, which can be found in the summary. The polygamma functions are calculated using the pracma-library.
+In R, GLM with gamma-distribution assumes the shape parameter $a$ to be constant. To satisfy this condition, a dispersion parameter $\phi := \frac1a$ is introduced, which can be found in the summary. The polygamma functions are calculated using the library `pracma`.
 
 ```{r}
 library(pracma)
@@ -298,7 +298,7 @@ theory.skew
 This gives the estimate for the skew of the log mammalian brain size given the body size as `r theory.skew`.
 
 
-### Sample skew of residuals from the LM in a:
+### Sample skew of residuals from the LM in (a):
 
 The sample skew is defined as
 $$
@@ -307,9 +307,9 @@ $$
 For the linear model fitted in a), we calculate the sample skew of the residuals:
 ```{r}
 # residuals from LM in a)
-x <- residuals(mod1)
+x <- residuals(mod0)
 
-m.3 <- 1/length(x)*sum((x - mean(x))^3)
+m.3 <- 1/length(x) * sum((x - mean(x))^3)
 s <- sd(x) # = sqrt(1/(length(x)-1) * sum((x-mean(x))^2)) 
 
 sample.skew <- m.3/s^3
