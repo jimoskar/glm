@@ -159,55 +159,69 @@ where $Y$ is the brain mass, $Y_0$ is a constant and $M$ is the brain mass. Sinc
 $$
 \ln(Y) = \ln(Y_0) + \frac{3}{4}\ln(M),
 $$
-we can, for the model in (b), simply perform the hypothesis test:
+This simply amounts to performing the hypothesis test:
 $$
-H_0: \beta_1 = \frac{3}{4} \quad \mathrm{vs.} \quad \beta_1 \ne \frac{3}{4}.
+H_0: \beta_1 = \frac{3}{4} \quad \mathrm{vs.} \quad \beta_1 \ne \frac{3}{4},
 $$
-We follow the standard framework for a linear hypothesis test:
+both for the linear model and the GLM. We first consider the linear model, and construct a Wald test:
 
 ```{r}
 # Wald test:
 C <- matrix(c(0, 1, 0), nrow = 1)
-d <-  3/4
+d <-  as.vector(3/4)
 r <- 1
 p <- 3
 n <-  nrow(mammals)
-beta1 <- mod1$coefficients[2]
-s2 <- deviance(mod1)
+beta.hat <- mod1$coefficients
+s2 <- deviance(mod1)/(n-p)
 X <- model.matrix(mod1)
 XtX.inv <- solve(t(X) %*% X)
 
-F.stat <-  (beta1-3/4)^2/(s2*XtX.inv[2,2])
-p.val <- pf(F.stat, r, n - p, lower.tail = F)
+w <- t((C %*% beta.hat - d)) %*% solve(s2*C %*% XtX.inv %*% t(C)) %*% (C %*% beta.hat - d)
+p.val <- pchisq(w, r, lower.tail = FALSE)
 p.val
 ```
 
-\textcolor{red}{get wrong p-value??} For a generalized linear model, the Wald statistic can be written as
+The likelihood-ratio test for the linear model can be carried out as follows:
+
+```{r}
+mod1.offset <- lm(log(brain) ~ is.human, offset = 3/4*log(body), data = mammals)
+A <- logLik(mod1.offset)
+B <- logLik(mod1)
+
+X.stat <- -2 * (as.numeric(A)-as.numeric(B))
+p.val <- pchisq(X.stat, df = r, lower.tail = FALSE)
+p.val
+```
+
+For a generalized linear model, the Wald statistic can be written as
 
 $$
 w =(C\hat{\boldsymbol{\beta}} - d)^T[CF^{-1}(\hat{\boldsymbol{\beta}})C^T]^{-1}(C\hat{\boldsymbol{\beta}} - d),
 $$
+
 which is asymptotically $\chi^2$-distributed with $r = \mathrm{rank}(C)$ degrees of freedom. We compute its value:
 ```{r}
-beta <- as.vector(mod.gamma$coefficients)
-denom <- solve(C %*% vcov(mod.gamma) %*% t(C))
-w <- (C %*% beta - d)^2*denom
+beta.hat <- as.vector(mod.gamma$coefficients)
+w <- t(C %*% beta.hat - d) %*% solve(C %*% vcov(mod.gamma) %*% t(C)) %*% (C %*% beta.hat - d)
 
-p.val <- pchisq(w, r, lower.tail = F)
+p.val <- pchisq(w, r, lower.tail = FALSE)
 p.val
 ```
 
-We perform LRT tests by using an offset term. First we consider the linear model:
-```{r}
-mod1.offset <- lm(log(brain) ~ 1 + is.human, offset = 3/4*log(body), data = mammals) 
-anova(mod1.offset, mod1, test= "Chisq")
-```
-Then we cosider the GLM
+Next, we perform an LR-test for the GLM:
 ```{r}
 mod.gamma.offset <- glm(brain ~ 1 + is.human, family = Gamma(link = "log"), offset = 3/4*log(body), data = mammals) 
-anova(mod.gamma.offset, mod.gamma, test= "Chisq")
+
+A <- logLik(mod.gamma.offset)
+B <- logLik(mod.gamma)
+
+X.stat <- -2 * (as.numeric(A)-as.numeric(B))
+p.val <- pchisq(X.stat, df = r, lower.tail = FALSE)
+p.val
 ```
-We see that the Wald test and the LRT test differ the most for the linear model. This could be explained by the fact that the Wald test for the lienar model is exact (the test statistic follows an $F$-distribution), while in the LRT test we use an asymptotic distribution. \textcolor{red}{This is wrong. (Right now the p-values are wrong too for some reason..) For one of the models, the LRT and Wald test are equivalent, while not for the other. We need to show this.}
+
+We observe that the p-values for the Wald and LR-test are almost equal for the linear model, while for the GLM, the difference is larger. The reason behind this is that the LR-test and Wald test are equivalent for the linear model. This can be shown by noting that the Wald-statistic is equal to the F-statistic, since $W = rF = F$ (see Fahrmeir p. 131). The likelihood ratio is, in turn, a strictly monotonic function of the F-statistic, showing that the two tests are equivalent. \textcolor{red}{need to show this??}. For the GLM, on the other hand, this is not the case, and the Wald test becomes an approximation to the LR-test (because it only considers the model under the alternative hypothesis, whereas the LR-test consider the model under both hypotheses).
 
 # f)
 We need to be careful comparing the log-likelihoods and hence the AICs of the models, because for the GLM we consider $Y \sim \mathrm{Gamma}$, while in the linear model we consider $\ln Y\sim \mathrm{Normal}$. To make them comparable, we define $X:= \ln(Y)$. Then (for the linear model) $Y = e^X$ and the Jacobian transformation yields a density of
