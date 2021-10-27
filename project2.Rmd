@@ -372,9 +372,9 @@ $$
 where $\alpha_{j(i)}$ is the effect of player $j(i)$ having white pieces, and $\beta_{l(i)}$ is the effect of player $l(i)$ having black pieces.
 
 ```{r}
-df <- read.csv('data/Norway\ Chess\ 2021.csv')
-
 library(VGAM)
+
+df <- read.csv('data/Norway\ Chess\ 2021.csv')
 head(df)
 
 
@@ -399,9 +399,9 @@ Since it could be argued that a given players skills with one color should be pr
 $$
 u_i = -(\alpha_{j(i)} - \alpha_{l(i)} ) + \varepsilon_i.
 $$
-\textcolor{red}{Need to drop one column from the design matrix in order to get full rank. Why? Silus says you can imagine that one effect dissapears into the intercept...}
+
+To get a design matrix of full rank, we need to remove one of the columns. Here we drop `carlsen`
 ```{r}
-library(Matrix)
 # The 'simpler' model from the lecture (effect of player being white is equal when being black)
 df$black = as.factor(df$black)
 df$white = as.factor(df$white)
@@ -413,17 +413,20 @@ for(i in 1:nrow(df)){
   X[i,black] = 1
   X[i, white] = -1
 }
-rankMatrix((X))
-ncol(X)
-# X does not have full rank.
-
-X$type = df$type
-X$type = as.factor(X$type)
 X$y = df$y
 
 fit.simple <- vglm(y ~ ., family=cumulative(parallel = TRUE, link="logitlink"), data=X[2:ncol(X)])
 summary(fit.simple)
 AIC(fit.simple)
 
+# Simple with type
+X$type = df$type
+fit.simple2 <- vglm(y ~ ., family=cumulative(parallel = TRUE, link="logitlink"), data=X[2:ncol(X)])
+AIC(fit.simple2)
+summary(fit.simple2)
+
+fit.simple3 <- vglm(y ~ ., family=cumulative(parallel = FALSE ~ type, link="logitlink"), data=X[2:ncol(X)])
+AIC(fit.simple3)
+summary(fit.simple3)
 ```
 
