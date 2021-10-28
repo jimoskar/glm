@@ -384,12 +384,10 @@ The complete data set can be seen on the next page.
 ```{r}
 df <- read.csv('data/Norway\ Chess\ 2021.csv')
 
-# change to factor variables
 df$black = as.factor(df$black)
 df$white = as.factor(df$white)
 df$type = as.factor(df$type)
 df$y <- factor(df$y, ordered=TRUE)
-
 df
 ```
 
@@ -428,15 +426,9 @@ $$
 where it is usually assumed that the residuals are normally distributed. We will ignore this for now, although this is not the case for the cumulative logit and Gumbel models.
 
 
-<<<<<<< HEAD
+
 \newpage
 # Cumulative logit models without interactions
-=======
-fit <- vglm(y ~ factor(white) + factor(black),
-            family=cumulative(parallel = TRUE, link="logitlink"), data=df)
-summary(fit)
-AIC(fit)
->>>>>>> 9e3d40e67f7b1aa4a641cdfdd9ee721aa949ae29
 
 ### Model 0
 
