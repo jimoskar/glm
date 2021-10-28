@@ -289,7 +289,7 @@ $$
 In R, GLM with gamma-distribution assumes the shape parameter $a$ to be constant. To satisfy this condition, a dispersion parameter $\phi := \frac1a$ is introduced, which can be found in the summary. The polygamma functions are calculated using the library `pracma`.
 
 ```{r}
-library(pracma)
+psi <- pracma::psi
 
 phi <- summary(mod.gamma)$dispersion
 a <- 1/phi
@@ -319,6 +319,9 @@ sample.skew
 ```
 
 \textcolor{red}{How does the skew of the log mammalian brain size compare to the sample skew of the residuals of the LM? - The first is negativly skewed, while the residuals are positivly skewed, soo ...}
+
+
+
 
 
 \newpage
@@ -353,62 +356,211 @@ $$
   &= F(\theta_r + \boldsymbol{x}_i^T \boldsymbol{\beta}) - F(\theta_{r-1} + \boldsymbol{x}_i^T \boldsymbol{\beta}).
   \end{split}
 $$
-This means that our model returns that white wins whenever $u_i \le \theta_1$, draw if $\theta_1 < u_i \le \theta_2$ and black win for $u_i > \theta_2$. 
+This means that our model returns that white wins whenever $u_i \le \theta_1$, draw if $\theta_1 < u_i \le \theta_2$ and black win for $u_i > \theta_2$. Since ordinal regression only depend on relative orderings, we do not need to include the intercept $\beta_0$ in $\boldsymbol{\beta}$, as then the values of the thresholds $\theta$s could be shifted by subtracting the value of the intercept. Using the notation $\boldsymbol{\beta} = \begin{bmatrix}\beta_1 & \cdots & \beta_k\end{bmatrix}^T$, the unknown parameters are therefore $\{ \theta_1, \theta_2, \beta_1, \cdots, \beta_k \}$.
 
-## Models
+## About the data
+
+Our data set consists of $n=44$ chess matches played with six players, where the set of players are
+$$
+  \text{P} = \{\text{carlsen},\ \text{firouzja},\ \text{karjakin},\ \text{nepomniachtchi},\ \text{rapport},\ \text{tari}\}.
+$$
+To get a better understanding of the data set, we give a recap of the tournament regulations. The matches was played over 10 rounds of classical games. The event was a double round-robin, meaning that two players played against each other in two separate rounds, one time with the white pieces and the other time with black. If the result of a the classical game was a draw, then the two players faced each other again to play an armageddon game with the same pieces as in the classical game. In each round, the six players played the three classical games simultaneously. In total, this results in 30 classical games. The remaining 14 comes from the armageddon games.
+
+For each round, the reward was 3 points for winning the classical game and 0 for loosing. If the classical game ended in a draw the armageddon game yielded 1.5 points for winning and 1 point for loosing. If this game also ended in a draw, the winner is declared to be the player with the black pieces. This means that the outcome "draw" and "black win" gave the same points for the armageddon format.
+
+The complete data set can be seen on the next page.
+
+\newpage
+```{r}
+df <- read.csv('data/Norway\ Chess\ 2021.csv')
+
+# change to factor variables
+df$black = as.factor(df$black)
+df$white = as.factor(df$white)
+df$type = as.factor(df$type)
+df$y <- factor(df$y, ordered=TRUE)
+
+df
+```
+
+\newpage
+
+
+# Assumptions about the residuals
 
 ### Propositional odds model / Cummulative Logit
 
 $$
   F(x) = \frac{e^x}{1+e^x}, \qquad \epsilon_i \sim \text{Logistic}(0,\ 1)
 $$
-### Cummulative Probit
+Using a propositional odds model, the residuals are logistic distributed.
+
+
+### Cumulative Probit
 
 $$
   F(x) = \Phi(x), \qquad \epsilon_i \sim N(0,\ 1)
 $$
-First we consider the model where 
+Using a cumulative probit model, the residuals are normally distributed.
+
+### Cumulative Gumbel
+
 $$
-u_i = -(\alpha_{j(i)} + \beta_{l(i)} ) + \varepsilon_i,
+  F(x) = e^{-e^{x}}, \quad \epsilon_i \sim \text{Gumbel}(x; 0, 1) = e^{-(x+e^{-x})}
 $$
-where $\alpha_{j(i)}$ is the effect of player $j(i)$ having white pieces, and $\beta_{l(i)}$ is the effect of player $l(i)$ having black pieces.
+
+### AICc
+
+Since we have a small number of observations, we also consider AICc, which adds a correction term to AIC, given by
+$$
+  \text{AICc} := \text{AIC} + \frac{2k^2 + 2k}{n-k-1},
+$$
+where it is usually assumed that the residuals are normally distributed. We will ignore this for now, although this is not the case for the cumulative logit and Gumbel models.
+
+
+\newpage
+# Cumulative logit models without interactions
+
+### Model 0
+
+Lets first assume that there are no interactions. Define a family of models on the form
+$$
+u_i = -(\alpha_{w(i)} + \beta_{b(i)} + \gamma_{t(i)} ) + \varepsilon_i,
+$$
+where $\alpha_{w(i)}$ is the effect of player $w(i)$ having white pieces, $\beta_{b(i)}$ is the effect of player $b(i)$ having black pieces and $\gamma_{t(i)}$ is the effect of type $t(i)$ of game played. Since the design matrix must have full rank, R automatically chooses the reference group for the different parameters. This is by default chosen to be the first in the lexicographic order. As so, "carlsen" will be the reference in both $\boldsymbol{\alpha}$ and $\boldsymbol{\beta}$, and "armageddon" will be the reference for type of game. As there are more classical games, we change the reference type using the relevel() function.
 
 ```{r}
 library(VGAM)
 
-df <- read.csv('data/Norway\ Chess\ 2021.csv')
-head(df)
+# change "classic" to reference type
+df <- within(df, type <- relevel(type, ref = "classic"))
 
+fit.0 <- vglm(y ~ white + black + type,
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df)
 
-fit <- vglm(y ~ factor(white) + factor(black),
-            family=cumulative(parallel = TRUE, link="logitlink"), data=df)
-AIC(fit)
-
+c(AIC = AIC(fit.0), AICc = AICc(fit.0))
+```
+```{r, echo = FALSE}
 # P(u <= theta_1), P(u <= theta_2)
-p.less_or_equal <- plogis(predict(fit, df))
-
-
+p.less_or_equal <- plogis(predict(fit.0, df))
 stats <- cbind('white'=df$white, 'black'=df$black,
                'P(white)'=round(p.less_or_equal[,1],2),
                'P(draw)'=round(p.less_or_equal[,2]-p.less_or_equal[,1],2),
                'P(black)'=round(1-p.less_or_equal[,2],2),
                'outcome'=c('white','draw','black')[df$y])
-stats
+#stats
 ```
 
-Since it could be argued that a given players skills with one color should be proportional or equal to the skills with another color, we next consider the model where $\alpha_j = \beta_j, \quad j = 1,2,\ldots, k$. The model becomes
+\newpage
+### Model 1
+
+Since it could be argued that a given players skill could be the same for playing both white and black, we next consider the model where the effect of playing white is equal to the effect of playing black, meaning $\alpha_j = - \beta_j, \quad j = 1,2,\ldots, k$. This would be a simpler model since there are fewer parameters to estimate. The model becomes
 
 $$
-u_i = -(\alpha_{j(i)} - \alpha_{l(i)} ) + \varepsilon_i.
+u_i = -(\alpha_{w(i)} - \alpha_{b(i)} + \gamma_{t(i)} ) + \varepsilon_i.
 $$
 
-To get a design matrix of full rank, we need to remove one of the columns. Here we drop `carlsen`
+To make this new model, we will do a dummy-encoding of the players, with value 1 if the player is white and -1 if the player is black. To make the design matrix full rank, we drop `carlsen`.
 ```{r}
-# The 'simpler' model from the lecture (effect of player being white is equal when being black)
-df$black = as.factor(df$black)
-df$white = as.factor(df$white)
+dummy_cols <- fastDummies::dummy_cols
+
+# dummy-encode white, add -1 for black
+df.dummy <- dummy_cols(df, select_columns = "white")
+for(i in 1:nrow(df.dummy)){
+    df.dummy[i, paste("white", df.dummy$black[i], sep="_")] = -1
+}
+# remove black, white, white_carlsen
+df.dummy <- subset(df.dummy, select = -c(black, white, white_carlsen))
+```
+
+```{r}
+# alpha = - beta
+fit.1 <- vglm(y ~ . - round, family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
+summary(fit.1)
+c(AIC = AIC(fit.1), AICc = AICc(fit.1))
+```
+
+\newpage
+### Model 2
+
+Same as model 1, but here we also assume that there are no effect of type of game played, thus
+$$
+  u_i = -(\alpha_{w(i)} - \alpha_{b(i)}) + \varepsilon_i.
+$$
+
+```{r}
+# alpha = - beta, gamma = 0
+fit.2 <- vglm(y ~ . - type - round, family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
+summary(fit.2)
+c(AIC = AIC(fit.2), AICc = AICc(fit.2))
+```
+
+\newpage
+### Model 3
+
+Similar as model 3, but we use "parallell = FALSE ~ type".
+
+```{r}
+# alpha = - beta, gamma = 0
+fit.3 <- vglm(y ~ . - type - round, family=cumulative(parallel = FALSE ~ type, link="logitlink"), data=df.dummy)
+summary(fit.3)
+c(AIC = AIC(fit.3), AICc = AICc(fit.3))
+```
+
+\newpage
+### Model 4
+
+From the models so far, we see that the model with the lowest AIC and AICc is model 2, the model consisting of only the relative strengths of each player. In the summary, we see that the relative strength of some players are close to one another, in particular "firouzja" and "rapport", but also note that "nepomniachtchi" and "karjakin" are comparable. Let us try fitting a model where we assume that the relative strength of "firouzja" and "rapport" are equal. Thus our model becomes
+$$
+  u_i = -(\alpha_{w(i)} - \alpha_{b(i)}) + \varepsilon_i,
+$$
+where $\alpha_{\text{firouzja}} = \alpha_{\text{rapport}}$.
+
+```{r}
+fit.4 <- vglm(y ~ I(white_firouzja + white_rapport) + white_nepomniachtchi + white_karjakin + white_tari,
+              family=cumulative(parallel = FALSE ~ type, link="logitlink"), data=df.dummy)
+summary(fit.4)
+c(AIC = AIC(fit.4), AICc = AICc(fit.4))
+```
+
+\newpage
+### Model 5
+Let us try fitting a model where we assume that the relative strength of "nepomniachtchi" and "karjakin" are equal. Thus our model becomes
+$$
+  u_i = -(\alpha_{w(i)} - \alpha_{b(i)}) + \varepsilon_i,
+$$
+where $\alpha_{\text{nepomniachtchi}} = \alpha_{\text{karjakin}}$.
+
+
+```{r}
+fit.5 <- vglm(y ~ I(white_firouzja + white_rapport) + I(white_nepomniachtchi + white_karjakin) + white_tari,
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
+summary(fit.5)
+c(AIC = AIC(fit.5), AICc = AICc(fit.5))
+```
+
+\newpage
+### Model 6
+Let us try fitting a model where we assume that the relative strength of all players except 'carlsen' are equal. Thus our model becomes
+$$
+  u_i = -(\alpha_{w(i)} - \alpha_{b(i)}) + \varepsilon_i,
+$$
+where $\alpha_{\text{carlsen}} = 0$ and $\alpha_{\text{not carlsen}} \ne 0$.
+
+```{r}
+fit.6 <- vglm(y ~ I(white_firouzja + white_rapport + white_nepomniachtchi + white_karjakin + white_tari),
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
+summary(fit.6)
+c(AIC = AIC(fit.6), AICc = AICc(fit.6))
+```
+
+
+
+
+```{r, eval = FALSE, echo = FALSE}
 X = data.frame(matrix(0, nrow(df), nlevels(df$black)))
 colnames(X) <- levels(df$black)
+
 for(i in 1:nrow(df)){
   black = as.character(df$black[i])
   white = as.character(df$white[i])
