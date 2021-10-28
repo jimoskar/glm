@@ -31,19 +31,19 @@ mod0 <- lm(log(brain) ~ log(body), data = mammals)
 summary(mod0)
 ```
 
-This shows that assuming $\ln(brain) = \beta_0 + \beta_1 \ln(body)$ suggest $brain \propto body^{\beta_1}$ with $\beta_1 \approx$ `r mod0$coefficients[2]`.
+If we let $\boldsymbol{y} = [y_1, \ldots, y_n]^T$ denote the brain mass and $\boldsymbol{x}_b = [x_{b1}, \ldots, x_{bn}]^T$ denote the corresponding body mass, we have fitted the model $\ln(y_i) = \beta_0 + \beta_1 \ln(x_{bi}))$, $i = 1,2\ldots n$, with parameter estimates given in the summary above.
 
 ## b)
-
+The extended model is fitted below.
 ```{r}
 mammals$is.human = as.factor(mammals$species == "Human")
 
 mod1 <- lm(log(brain) ~ log(body) + is.human, data = mammals)
 summary(mod1)
 ```
-Let $\hat{\boldsymbol{\beta}} = \begin{bmatrix}\hat{\beta}_0 & \hat{\beta}_1 & \hat{\beta}_2\end{bmatrix}^T$ be the coefficient estimates given in the summary above. Then the estimated effect on brain mass from being a human is $\hat{\beta}_2 \approx$ `r mod1$coefficients[3]`. Since we have used a log-transform on both the brain mass and body mass, humans will according to the model be larger by a factor of $e^{\hat{\beta}_2} =$ `r exp(mod1$coefficients[3])`.
+Let $\hat{\boldsymbol{\beta}} = \begin{bmatrix}\hat{\beta}_0 & \hat{\beta}_1 & \hat{\beta}_2\end{bmatrix}^T$ be the coefficient estimates given in the summary above, where $\hat{\beta}_2 \approx$ `r mod1$coefficients[3]` models the effect which being a human has on the (log of) brain size. Since we have used a log-transform on both the brain mass and body mass, humans will according to the model be larger by a factor of $e^{\hat{\beta}_2} =$ `r exp(mod1$coefficients[3])`.
 
-We use the notation $\boldsymbol{y} = X\boldsymbol{\beta} + \boldsymbol{\varepsilon}$ to represent the linear model. Here, $X$ is the $n \times p$ design matrix, where $n$ is the number of observations and $p$ is the number of parameters used in the model. As usual, $\boldsymbol{\varepsilon} \sim \mathcal{N}(\boldsymbol{0}, \sigma^2 I_n)$. This (along with the other usual assumptions \textcolor{red}{how much detail is required here??}) gives the well known result:
+We use the notation $\boldsymbol{y} = X\boldsymbol{\beta} + \boldsymbol{\varepsilon}$ to represent the linear model. Here, $X$ is the $n \times p$ design matrix, where $n$ is the number of observations and $p$ is the number of parameters used in the model. Here, $X = \begin{bmatrix}\boldsymbol{1} & \ln\boldsymbol{x}_b & \boldsymbol{x}_h\end{bmatrix}$, where $\boldsymbol{x}_h = [x_{h1}, \ldots, x_{hn}]^T = [0, \ldots 0, 1, 0, \ldots, 0]^T$ which has a nonzero entry $x_{hh} = 1$ only for humans only. As usual, $\boldsymbol{\varepsilon} \sim \mathcal{N}(\boldsymbol{0}, \sigma^2 I_n)$. We know that
 
 $$
 \hat{\boldsymbol{\beta}} \sim \mathcal{N}(\boldsymbol{\beta}, \sigma^2(X^TX)^{-1}).
@@ -86,10 +86,10 @@ The calculated p-value is `r p.val`.
 
 ## c)
 
-We now consider all non-human mammals and construct a one-sided prediction interval for the (log of) human brain size. Define $n' = n -1$ as the number of observations and let $Y_h = \beta_0 + \beta_1 x_h + \varepsilon_h$ be the stochastic variable from which the log of the human brain mass is realized and $\widehat{Y}_h = \hat{\beta}_0 + \hat{\beta}_1x_h$ be the corresponding estimator. Then we can find the pivotal quantity
+We now consider all non-human mammals and construct a one-sided prediction interval for the human brain size. For ease of notation, we define $z_i := \ln y_i$ and $v_i = \ln(x_{bi})$. We also let $n' = n -1$ as the number of observations (since we exclude humans). Now,  $z_h = \beta_0 + \beta_1 v_h + \varepsilon_h$ is the stochastic variable from which the log of the human brain mass is realized and $\hat{z}_h = \hat{\beta}_0 + \hat{\beta}_1v_h$ is the corresponding estimate. Then we can find the pivotal quantity
 
 $$
-T_2 = \frac{Y_h - \widehat{Y}_h}{s\sqrt{1 + 1/n' + \frac{(x_h - \bar{x})^2}{\sum_{i = 1}^{n'}(x_i-\bar{x})^2}}} \sim t_{n' -2}.
+T_2 = \frac{z_h - \widehat{z}_h}{s\sqrt{1 + 1/n' + \frac{(v_h - \bar{v})^2}{\sum_{i = 1}^{n'}(v_i-\bar{v})^2}}} \sim t_{n' -2}.
 $$
 We refer to the good old [\textcolor{blue}{subject-pages}](https://tma4245.math.ntnu.no) (simple linear regression/prediction and prediction intervals in simple linear regression) for this result. Thus, we can find the one-sided prediction interval:
 
@@ -99,33 +99,37 @@ $$
 Rearranging, we arrive at
 
 $$
-P\left(Y_h < \underbrace{t_{n'-2,\ \alpha} \cdot s\sqrt{1 + 1/n' + \frac{(x_h - \bar{x})^2}{\sum_{i = 1}^n(x_i-\bar{x})^2}} + \widehat{Y}_h}_{=\ U} \right) = 1 - \alpha
+P\left(z_h < \underbrace{t_{n'-2,\ \alpha} \cdot s\sqrt{1 + 1/n' + \frac{(v_h - \bar{v})^2}{\sum_{i = 1}^n(v_i-\bar{v})^2}} + \widehat{z}_h}_{=\ \ln U} \right) = 1 - \alpha.
 $$
-We denote the right hand side of the inequality above by $U$ and in accordance with the task description define
+Taking both sides of the inequality to the power of $e$, we get
+$$
+P(y_h < U) = 1-\alpha.
+$$
+In accordance with the task description, we define
 
 $$
-A = \{Y_h \notin (-\infty,\ U)\} = \{Y_h \ge U\}, \quad \text{and} \quad B = \{ T_1 \ge t_{n-p,\ \alpha}\}
+A = \{y_h \notin (-\infty,\ U)\} = \{y_h \ge U\}, \quad \text{and} \quad B = \{ T_1 \ge t_{n-p,\ \alpha}\}
 $$
-We now observe that $A$ is equivalent to $\{T_2 \ge t_{n'-2,\ \alpha}\} = \{T_2 \ge t_{n-p,\ \alpha}\}$, where $p = 3$ as before. To show that $A$ and $B$ are equivalent, we find the MLE of $\beta_2$ from the model in b) by considering the profile log-likelihood:
+We now observe that $A$ is equivalent to $\{T_2 \ge t_{n'-2,\ \alpha}\} = \{T_2 \ge t_{n-p,\ \alpha}\}$, where $p = 3$ as before. To show that $A$ and $B$ are equivalent, we find the MLE of $\beta_2$ from the model in b) by considering the profile log-likelihood (here $\boldsymbol{x}_i$ denotes the $i$'th row of the previously defined design matrix) :
 $$
 \begin{split}
 l_p(\beta_0,\beta_1) &= \sup_{\beta_2} l(\beta_0,\beta_1, \beta_2)\\
-&= \sup_{\beta_2}\ln\left( \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi}\sigma}  e^{-\frac{1}{2}\left(\frac{y_i-\boldsymbol{x}_i^T\boldsymbol{\beta}}{\sigma}\right)^2}\right) \\
-&= \sup_{\beta_2} \left( n\ln\left(\frac{1}{\sqrt{2\pi}\sigma}\right) - \frac{1}{2\sigma^2}\sum_{i = 1}^n (y_i-\boldsymbol{x}_i^T\boldsymbol{\beta})^2\right)\\
-&= \sup_{\beta_2} \left( n\ln\left(\frac{1}{\sqrt{2\pi}\sigma}\right) - \frac{1}{2\sigma^2}\sum_{\begin{matrix}i=1\\i\ne h\end{matrix}}^n (y_i-\boldsymbol{x}_i^T\boldsymbol{\beta})^2- \frac{1}{2\sigma^2} (y_h-\boldsymbol{x}_h^T\boldsymbol{\beta})^2\right).
+&= \sup_{\beta_2}\ln\left( \prod_{i=1}^{n} \frac{1}{\sqrt{2\pi}\sigma}  e^{-\frac{1}{2}\left(\frac{z_i-\boldsymbol{x}_i^T\boldsymbol{\beta}}{\sigma}\right)^2}\right) \\
+&= \sup_{\beta_2} \left( n\ln\left(\frac{1}{\sqrt{2\pi}\sigma}\right) - \frac{1}{2\sigma^2}\sum_{i = 1}^n (z_i-\boldsymbol{x}_i^T\boldsymbol{\beta})^2\right)\\
+&= \sup_{\beta_2} \left( n\ln\left(\frac{1}{\sqrt{2\pi}\sigma}\right) - \frac{1}{2\sigma^2}\sum_{\begin{matrix}i=1\\i\ne h\end{matrix}}^n (z_i-\boldsymbol{x}_i^T\boldsymbol{\beta})^2- \frac{1}{2\sigma^2} (z_h-\boldsymbol{x}_h^T\boldsymbol{\beta})^2\right).
 \end{split}
 $$
-Since $x_{i,2}$ is nonzero for only one term in the sum above, say for  $i = h$, we only need to consider this term. That is, the term with $\boldsymbol{x}_h := \begin{bmatrix}1 & x_h & 1\end{bmatrix}^T$. The constant in front of $(y_h-\boldsymbol{x}_h^T\boldsymbol{\beta})^2$ is negative, so the supremum is attained when this is equal to zero. Thus,
+Since $x_{hi}$ is nonzero for only one term in the sum above (for $i = h$) we only need to consider this term. That is, the term with $\boldsymbol{x}_h := \begin{bmatrix}1 & \ln x_{bh} & 1\end{bmatrix}^T$. The constant in front of $(z_h-\boldsymbol{x}_h^T\boldsymbol{\beta})^2$ is negative, so the supremum is attained when this is equal to zero. Thus,
 
 $$
-(y_h-\boldsymbol{x}_h^T\boldsymbol{\beta})^2 = 0 \quad \implies \quad y_h - \beta_0 - \beta_1 x_h - \beta_2 = 0,
+(z_h-\boldsymbol{x}_h^T\boldsymbol{\beta})^2 = 0 \quad \implies \quad z_h - \beta_0 - \beta_1 v_h - \beta_2 = 0,
 $$
 
-which means that $\beta_2 = y_h - \beta_0 - \beta_1x_h$. Due to the invariance of MLEs, we now know that
+which means that $\beta_2 = z_h - \beta_0 - \beta_1v_h$. Due to the invariance of MLEs, we now know that
 $$
-\hat{\beta}_2 = Y_h - \hat{\beta}_0 - \hat{\beta_1}x_h = Y_h - \widehat{Y}_h.
+\hat{\beta}_2 = z_h - \hat{\beta}_0 - \hat{\beta_1}v_h = z_h - \widehat{z}_h.
 $$
-We also note that the estimators $\hat{\beta}_0$ and $\hat{\beta}_1$ are the same here as in the case where we do not consider humans (since the term involving $\boldsymbol{x}_h$ in the log-likelihood evaluates to zero). Thus, since both $T_1$ and $T_2$ depend on the same $\hat{\beta}_2 = Y_h - \widehat{Y}_h$, meaning that $A$ and $B$ occur when the difference $Y_h - \widehat{Y}_h$ is large, we can conclude that the two events are equivalent. 
+We also note that the estimators $\hat{\beta}_0$ and $\hat{\beta}_1$ are the same here as in the case where we do not consider humans (since the term involving $\boldsymbol{x}_h$ in the log-likelihood evaluates to zero). Thus, since both $T_1$ and $T_2$ depend on the same $\hat{\beta}_2 = z_h - \widehat{z}_h$, meaning that $A$ and $B$ occur when the difference $z_h - \widehat{z}_h$ is large, we can conclude that the two events are equivalent. 
 
 \textcolor{red}{More precise than this?}
 
@@ -134,9 +138,9 @@ For a gamma-distributed random variable, the pdf takes the form
 $$
 f(x; a,b) = \frac{b^a}{\Gamma(a)} x^{a-1}e^{-bx}.
 $$
-Using the parametrization $\mu = \frac{a}{b}$ and $\nu = a$, we construct the GLM with a log-link as follows. Let the mammalian brain size given body size be given as
+Using the parametrization $\mu = \frac{a}{b}$ and $\nu = a$, we construct the GLM with a log-link as follows.
 $$
-Y_i \sim \mathrm{Gamma}(\mu_i,\ \nu_i),
+y_i \sim \mathrm{Gamma}(\mu_i,\ \nu_i),
 $$
 with $\text{E}[Y_i] = \mu_i$, such that
 $$
@@ -150,20 +154,22 @@ summary(mod.gamma)
 
 
 ## e)
-We want to test whether the following relationship holds:
+We want to test whether the following relationship holds (recall earlier notation):
 $$
-Y = Y_0M^{3/4},
+y_i = y_0x_{bi}^{3/4},
 $$
-where $Y$ is the brain mass, $Y_0$ is a constant and $M$ is the brain mass. Since this is equivalent to testing
+where $y_i$ is the brain mass, $y_0$ is a constant and $x_{bi}$ is the body mass. Since this is equivalent to testing
 
 $$
-\ln(Y) = \ln(Y_0) + \frac{3}{4}\ln(M),
+\ln(y_i) = \ln(y_0) + \frac{3}{4}\ln(x_{bi}),
 $$
-This simply amounts to performing the hypothesis test:
+this simply amounts to performing the hypothesis test:
 $$
-H_0: \beta_1 = \frac{3}{4} \quad \mathrm{vs.} \quad \beta_1 \ne \frac{3}{4},
+H_0: \beta_1 = \frac{3}{4} \quad \mathrm{vs.} \quad \beta_1 \ne \frac{3}{4}.
 $$
-both for the linear model and the GLM. We first consider the linear model, and construct a Wald test:
+
+### Linear model
+We first consider the linear model from (b), and construct a Wald test:
 
 ```{r}
 # Wald test:
@@ -192,8 +198,12 @@ B <- logLik(mod1)
 X.stat <- -2 * (as.numeric(A)-as.numeric(B))
 p.val <- pchisq(X.stat, df = r, lower.tail = FALSE)
 p.val
+
+# Use this instead? ask about this?
+anova(mod1, mod1.offset, test = 'LRT')
 ```
 
+### Gamma-GLM
 For a generalized linear model, the Wald statistic can be written as
 
 $$
@@ -239,12 +249,12 @@ $$
 where  $l_X(\boldsymbol{\beta})$ is the log-likelihood of the original linear model. We implement this 'correction' in the calculation of AIC below: 
 ```{r}
 p = 3
-AIC.linear <- 2*p + 2*logLik(mod1) - sum(log(mammals$brain))
+AIC.linear <- 2*p + 2*(logLik(mod1) - sum(log(mammals$brain)))
 AIC.gamma <- 2*p + 2*logLik(mod.gamma)
 AIC.linear
 AIC.gamma
 ```
-
+We see that the gamma-GLM is superior to the linear mode with respect to AIC.
 ### Theoretical skew of log of gamma distribution:
 
 Let $Y$ be gamma distributed with shape parameter $a$ and rate parameter $b$.
@@ -318,7 +328,7 @@ sample.skew <- m.3/s^3
 sample.skew
 ```
 
-\textcolor{red}{How does the skew of the log mammalian brain size compare to the sample skew of the residuals of the LM? - The first is negativly skewed, while the residuals are positivly skewed, soo ...}
+We observe that the estimated skew of the log-gamma distributed variable is negative and larger in absolute value than the sample skew of the residuals of the linear model from (a). This arguably makes the linear model more suitable than gamma-GLM, \textcolor{red}{because...}
 
 
 
@@ -418,8 +428,15 @@ $$
 where it is usually assumed that the residuals are normally distributed. We will ignore this for now, although this is not the case for the cumulative logit and Gumbel models.
 
 
+<<<<<<< HEAD
 \newpage
 # Cumulative logit models without interactions
+=======
+fit <- vglm(y ~ factor(white) + factor(black),
+            family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+summary(fit)
+AIC(fit)
+>>>>>>> 9e3d40e67f7b1aa4a641cdfdd9ee721aa949ae29
 
 ### Model 0
 
@@ -571,7 +588,9 @@ X$y = df$y
 
 fit.simple <- vglm(y ~ ., family=cumulative(parallel = TRUE, link="logitlink"), data=X[2:ncol(X)])
 summary(fit.simple)
+anova(fit, fit.simple, test = "LRT", type = 1)
 AIC(fit.simple)
+df.residual(fit)
 
 # Simple with type
 X$type = df$type
