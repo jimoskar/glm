@@ -221,7 +221,8 @@ p.val
 
 Next, we perform an LR-test for the GLM:
 ```{r}
-mod.gamma.offset <- glm(brain ~ 1 + is.human, family = Gamma(link = "log"), offset = 3/4*log(body), data = mammals) 
+mod.gamma.offset <- glm(brain ~ 1 + is.human, family = Gamma(link = "log"),
+                        offset = 3/4*log(body), data = mammals) 
 
 A <- logLik(mod.gamma.offset)
 B <- logLik(mod.gamma)
@@ -463,8 +464,7 @@ stats <- cbind('white'=df$white, 'black'=df$black,
 \newpage
 ### Model 1
 
-Since it could be argued that a given players skill could be the same for playing both white and black, we next consider the model where the effect of playing white is equal to the effect of playing black, meaning $\alpha_j = - \beta_j, \quad j = 1,2,\ldots, k$. This would be a simpler model since there are fewer parameters to estimate. The model becomes
-
+Since it could be argued that the given skill level of a player could be the same for playing both white and black, we next consider the model where the effect of playing white is equal to the effect of playing black, meaning $\alpha_j = - \beta_j, \quad j = 1,2,\ldots, k$. This would be a simpler model since there are fewer parameters to estimate. The model becomes
 $$
 u_i = -(\alpha_{w(i)} - \alpha_{b(i)} + \gamma_{t(i)} ) + \varepsilon_i.
 $$
@@ -484,7 +484,8 @@ df.dummy <- subset(df.dummy, select = -c(black, white, white_carlsen))
 
 ```{r}
 # alpha = - beta
-fit.1 <- vglm(y ~ . - round, family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
+fit.1 <- vglm(y ~ . - round,
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
 summary(fit.1)
 c(AIC = AIC(fit.1), AICc = AICc(fit.1))
 ```
@@ -499,25 +500,14 @@ $$
 
 ```{r}
 # alpha = - beta, gamma = 0
-fit.2 <- vglm(y ~ . - type - round, family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
+fit.2 <- vglm(y ~ . - type - round,
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
 summary(fit.2)
 c(AIC = AIC(fit.2), AICc = AICc(fit.2))
 ```
 
 \newpage
 ### Model 3
-
-Similar as model 3, but we use "parallell = FALSE ~ type".
-
-```{r}
-# alpha = - beta, gamma = 0
-fit.3 <- vglm(y ~ . - type - round, family=cumulative(parallel = FALSE ~ type, link="logitlink"), data=df.dummy)
-summary(fit.3)
-c(AIC = AIC(fit.3), AICc = AICc(fit.3))
-```
-
-\newpage
-### Model 4
 
 From the models so far, we see that the model with the lowest AIC and AICc is model 2, the model consisting of only the relative strengths of each player. In the summary, we see that the relative strength of some players are close to one another, in particular "firouzja" and "rapport", but also note that "nepomniachtchi" and "karjakin" are comparable. Let us try fitting a model where we assume that the relative strength of "firouzja" and "rapport" are equal. Thus our model becomes
 $$
@@ -526,14 +516,15 @@ $$
 where $\alpha_{\text{firouzja}} = \alpha_{\text{rapport}}$.
 
 ```{r}
-fit.4 <- vglm(y ~ I(white_firouzja + white_rapport) + white_nepomniachtchi + white_karjakin + white_tari,
-              family=cumulative(parallel = FALSE ~ type, link="logitlink"), data=df.dummy)
-summary(fit.4)
-c(AIC = AIC(fit.4), AICc = AICc(fit.4))
+fit.3 <- vglm(y ~ I(white_firouzja + white_rapport)
+              + white_nepomniachtchi + white_karjakin + white_tari,
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
+summary(fit.3)
+c(AIC = AIC(fit.3), AICc = AICc(fit.3))
 ```
 
 \newpage
-### Model 5
+### Model 4
 Let us try fitting a model where we assume that the relative strength of "nepomniachtchi" and "karjakin" are equal. Thus our model becomes
 $$
   u_i = -(\alpha_{w(i)} - \alpha_{b(i)}) + \varepsilon_i,
@@ -542,14 +533,15 @@ where $\alpha_{\text{nepomniachtchi}} = \alpha_{\text{karjakin}}$.
 
 
 ```{r}
-fit.5 <- vglm(y ~ I(white_firouzja + white_rapport) + I(white_nepomniachtchi + white_karjakin) + white_tari,
+fit.4 <- vglm(y ~ I(white_firouzja + white_rapport)
+              + I(white_nepomniachtchi + white_karjakin) + white_tari,
               family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
-summary(fit.5)
-c(AIC = AIC(fit.5), AICc = AICc(fit.5))
+summary(fit.4)
+c(AIC = AIC(fit.4), AICc = AICc(fit.4))
 ```
 
 \newpage
-### Model 6
+### Model 5
 Let us try fitting a model where we assume that the relative strength of all players except 'carlsen' are equal. Thus our model becomes
 $$
   u_i = -(\alpha_{w(i)} - \alpha_{b(i)}) + \varepsilon_i,
@@ -557,10 +549,11 @@ $$
 where $\alpha_{\text{carlsen}} = 0$ and $\alpha_{\text{not carlsen}} \ne 0$.
 
 ```{r}
-fit.6 <- vglm(y ~ I(white_firouzja + white_rapport + white_nepomniachtchi + white_karjakin + white_tari),
+fit.5 <- vglm(y ~ I(white_firouzja + white_rapport+ white_nepomniachtchi
+                    + white_karjakin + white_tari),
               family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
-summary(fit.6)
-c(AIC = AIC(fit.6), AICc = AICc(fit.6))
+summary(fit.5)
+c(AIC = AIC(fit.5), AICc = AICc(fit.5))
 ```
 
 
