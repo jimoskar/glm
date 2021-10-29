@@ -445,12 +445,29 @@ library(VGAM)
 # change "classic" to reference type
 df <- within(df, type <- relevel(type, ref = "classic"))
 
-fit.0 <- vglm(y ~ white + black + type,
+fit00<- vglm(y ~ white + black + type,
               family=cumulative(parallel = TRUE, link="logitlink"), data=df)
 
-c(AIC = AIC(fit.0), AICc = AICc(fit.0))
+c(AIC = AIC(fit00), AICc = AICc(fit00))
+anova(fit00, type = 3, test = "LRT")
+summary(fit00)
 ```
-```{r, echo = FALSE}
+
+From the summary, we observe that `type` has a high p-value, so we try to fit a model without a `type` covariate and compare the models with a deviance-based test.
+```{r}
+fit01 <-  vglm(y ~ white + black,
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+anova(fit01, fit00, type = 1, test = 'LRT')
+```
+The test does not yield evidence that the model without `type` is more suitable, but the AIC and AICc are lower:
+
+```{r}
+c(AIC = AIC(fit01), AICc = AICc(fit01))
+```
+
+
+
+```{r, echo = FALSE, eval = F}
 # P(u <= theta_1), P(u <= theta_2)
 p.less_or_equal <- plogis(predict(fit.0, df))
 stats <- cbind('white'=df$white, 'black'=df$black,
@@ -469,7 +486,7 @@ $$
 u_i = -(\alpha_{w(i)} - \alpha_{b(i)} + \gamma_{t(i)} ) + \varepsilon_i.
 $$
 
-To make this new model, we will do a dummy-encoding of the players, with value 1 if the player is white and -1 if the player is black. To make the design matrix full rank, we drop `carlsen`.
+To make this new model, we will do a dummy-encoding of the players, with value 1 if the player is white and -1 if the player is black. To make the design matrix have full rank, we drop `carlsen`.
 ```{r}
 dummy_cols <- fastDummies::dummy_cols
 
@@ -484,10 +501,28 @@ df.dummy <- subset(df.dummy, select = -c(black, white, white_carlsen))
 
 ```{r}
 # alpha = - beta
-fit.1 <- vglm(y ~ . - round,
+fit10 <- vglm(y ~ . - round,
               family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
-summary(fit.1)
-c(AIC = AIC(fit.1), AICc = AICc(fit.1))
+summary(fit10)
+c(AIC = AIC(fit10), AICc = AICc(fit10))
+```
+
+Again, we see that `type` has a high p-value, and we therefore consider a model without it:
+```{r}
+fit11 <- vglm(y ~ . - round - type ,
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
+anova(fit10, fit11, type = 1, test = 'LRT')
+```
+
+```{r}
+G2 = deviance(fit11) - deviance(fit10)
+df.diff = df.residual(fit11) - df.residual(fit10) 
+G2
+1 - pchisq(G2, df.diff)
+```
+The test gives no reason to prefer the simpler model, but the values for AIC and AICc are lower:
+```{r}
+c(AIC = AIC(fit11), AICc = AICc(fit11))
 ```
 
 \newpage
