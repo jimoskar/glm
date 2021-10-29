@@ -377,225 +377,174 @@ df
 
 \newpage
 
+## Assumptions about the residuals
 
-# Assumptions about the residuals
-
-In our analysis, we will consider two different distributions of the data. Both 
-
-### Propositional odds model / Cummulative Logit
-
+In our analysis, we will assume that the residuals are homoscedastic, are independent and have zero-mean. In addition, we will also assume that the distribution is symmetric (with no skew). There are two common distributions with these properties to consider. The first is the cumulative logit model, given by
 $$
-  F(x) = \frac{e^x}{1+e^x}, \qquad \epsilon_i \sim \text{Logistic}(0,\ 1)
+  F(x) = \frac{e^x}{1+e^x}, \qquad \epsilon_i \sim \text{Logistic}(0,\ 1).
 $$
-Using a propositional odds model, the residuals are logistic distributed.
-
-
-### Cumulative Probit
-
+Using the cumulative model, the residuals are standard logistic distributed. The second model is the cumulative probit model, given by
 $$
-  F(x) = \Phi(x), \qquad \epsilon_i \sim N(0,\ 1)
+  F(x) = \Phi(x), \qquad \epsilon_i \sim N(0,\ 1),
 $$
-Using a cumulative probit model, the residuals are normally distributed.
+where the residuals are normally distributed.
 
+Some sources indicate playing white gives a slight advantage over playing black, see for instance here. In addition, the fact that the armageddon games gives the black player no incentive to win the game (since a draw yields the same score), one could argue that the residuals should therefore be slightly negatively skewed. We will ignore this, as the resulting probabilities do not only depended on the shape of $F$ and the value of $\hat u_i = -x_i^T \boldsymbol{\hat\beta}$, but also on the estimated thresholds $\hat \theta_1$ and $\hat \theta_2$.
 
-### AICc
+## Assumptions of the player stregths
 
-Since we have a small number of observations, we also consider AICc, which adds a correction term to AIC, given by
+There are multiple factors which can influence the outcome of a chess game. In our data we only have access to the player who played white, the player who played black, what type of game it was and which round the game unfolded. The difference in playing styles, psychology and players earlier encounters might give more insight into the relative strength of the players, but we restrict us to this event only. Here we assume that each player is static in the sense that their relative strengths stays fixed throughout the tournament. In the first set of models, we assume that there are no interactions between individual players and other factors.
+
+Later we will investigate some potential interactions in the data. Some players might have particular areas that they are better at than others, such as playing with a specific color or playing armageddon. Others might get tired during the event, resulting in poorer results in the later rounds.
+
+## Model selection
+
+For model selection, we will use AIC and do liklihood-ratio tests comparing different models. Since we have a small number of observations, we also consider AICc, which adds a correction term to AIC, given by
 $$
   \text{AICc} := \text{AIC} + \frac{2k^2 + 2k}{n-k-1},
 $$
-where it is usually assumed that the residuals are normally distributed. We will ignore this for now, although this is not the case for the cumulative logit and Gumbel models.
+where it is assumed that the residuals are normally distributed. Although the residuals in the logit model is not normal, we will still calculate the AICc value here too.
 
-
-### Liklihood ratio test based on change in deviance
-
-For two nested models $M_i$ and $M_j$, where $M_i$ contains the parameters in $M_j$ and an additional $k$ parameters. Then under the null hypothesis that $M_i$ is the true model, then, based on Wilk's theorem, it follows that the change in deviance between the two models is approximately chi-squared distributed with $k$ degrees of freedom. This can be written as
+The liklihood-ratio test are based on change in deviance. For two nested models $M_1$ and $M_2$, where $M_2$ contains the parameters in $M_1$ and an additional $k$ parameters, then under the null hypothesis that $M_1$ is the true model, it follows from Wilk's theorem that the change in deviance between the two models is approximately chi-squared distributed with $k$ degrees of freedom. This can be written as
 $$
-  \Delta D = D_i - D_j \overset{\text{approx}}{\sim} \chi^2_{k},
+  \Delta D = D_2 - D_1 \overset{\text{a}}{\sim} \chi^2_{k}.
 $$
-which can later be used for hypothesis testing using the inbuilt pchisq()-function.
-
+For the hypothesis test
+$$
+  H_0: \text{keep } M_1 \qquad \text{vs.} \qquad H_1: \text{replace } M_1 \text{ in favor of } M_2,
+$$
+then if the null hypothesis is correct, we reject $H_0$ with $1-\alpha$ certainty if $\Delta D < \chi^2_{k,\ \alpha}$.
 
 \newpage
-# Cumulative logit models without interactions
-
-### Model 0
+# Simple models without interactions
 
 Lets first assume that there are no interactions. Define a family of models on the form
 $$
-u_i = -(\alpha_{w(i)} + \beta_{b(i)} + \gamma_{t(i)} ) + \varepsilon_i,
+u_i = -(\alpha_{w(i)} + \beta_{b(i)} + \delta_{r(i)} + \gamma_{t(i)} ) + \varepsilon_i,
 $$
-where $\alpha_{w(i)}$ is the effect of player $w(i)$ having white pieces, $\beta_{b(i)}$ is the effect of player $b(i)$ having black pieces and $\gamma_{t(i)}$ is the effect of type $t(i)$ of game played. Since the design matrix must have full rank, R automatically chooses the reference group for the different parameters. This is by default chosen to be the first in the lexicographic order. As so, "carlsen" will be the reference in both $\boldsymbol{\alpha}$ and $\boldsymbol{\beta}$, and "armageddon" will be the reference for type of game. As there are more classical games, we change the reference type using the relevel() function.
+where $\alpha_{w(i)}$ is the effect of player $w(i)$ having white pieces, $\beta_{b(i)}$ is the effect of player $b(i)$ having black pieces, $\delta_{r(i)}$ is the effect of round $r(i)$ and $\gamma_{t(i)}$ is the effect of type $t(i)$ of game played. Since the design matrix must have full rank, R automatically chooses the reference group for the different parameters. This is by default chosen to be the first in the lexicographic order. As so, "carlsen" will be the reference in both $\boldsymbol{\alpha}$ and $\boldsymbol{\beta}$, and "armageddon" will be the reference for type of game. As there are more classical games, we change the reference type using the relevel() function.
 
+Let the base model be basic model by `fit.all`. We fit the model in R:
 ```{r}
 library(VGAM)
 
 # change "classic" to reference type
 df <- within(df, type <- relevel(type, ref = "classic"))
 
-fit00<- vglm(y ~ white + black + type,
+fit.all <- vglm(y ~ white + black + round + type,
               family=cumulative(parallel = TRUE, link="logitlink"), data=df)
 
-c(AIC = AIC(fit00), AICc = AICc(fit00))
-anova(fit00, type = 3, test = "LRT")
-summary(fit00)
+c(AIC = AIC(fit.all), AICc = AICc(fit.all))
+anova(fit.all, type = 3, test = "LRT")
+summary(fit.all)
 ```
 
-From the summary, we observe that `type` has a high p-value, so we try to fit a model without a `type` covariate and compare the models with a deviance-based test.
+From the summary, we observe that `round` and `type` has the highest p-values, so we try to fit a model without `round` and a model without `type`. Denote these models by `fit.no_r` and `fit.no_t`, respectively. Then we compare to the base model with a deviance-based LR-test.
+
 ```{r}
-fit01 <-  vglm(y ~ white + black,
+fit.no_r <-  vglm(y ~ white + black + type,
               family=cumulative(parallel = TRUE, link="logitlink"), data=df)
-anova(fit01, fit00, type = 1, test = 'LRT')
+anova(fit.no_r, fit.all, type = 1, test = 'LRT')
 ```
-The test does not yield evidence that the model without `type` is more suitable, but the AIC and AICc are lower:
+```{r}
+fit.no_t <-  vglm(y ~ white + black + round,
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+anova(fit.no_t, fit.all, type = 1, test = 'LRT')
+```
+
+The LR-tests get p-values of $0.9379$ and $0.7773$ respectively, which with $\alpha = 0.05$ does not yield evidence that the more complicated model are more suitable than the simpler models. In addition, the AIC and AICc are lower for both the simpler models:
+```{r}
+c(AIC = AIC(fit.no_r), AICc = AICc(fit.no_r))
+
+c(AIC = AIC(fit.no_t), AICc = AICc(fit.no_t))
+```
+Based on this, we choose to investigate a simpler model where $\delta = 0$ and $\gamma = 0$. This means we are investigating the model with the form
+$$
+  u_i = -(\alpha_{w(i)} + \beta_{b(i)} ) + \varepsilon_i,
+$$
+which suggests that the outcome of each game only depend on the relative strengths of playing white and black. Denote this simpler model by `fit.no_rt`. First we compare this model to the first model `fit.all` to test if removing these two parameters are fine.
 
 ```{r}
-c(AIC = AIC(fit01), AICc = AICc(fit01))
+fit.no_rt <-  vglm(y ~ white + black,
+                           family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+anova(fit.no_rt, fit.all, type = 1, test = 'LRT')
 ```
-
-
-
-```{r, echo = FALSE, eval = F}
-# P(u <= theta_1), P(u <= theta_2)
-p.less_or_equal <- plogis(predict(fit.0, df))
-stats <- cbind('white'=df$white, 'black'=df$black,
-               'P(white)'=round(p.less_or_equal[,1],2),
-               'P(draw)'=round(p.less_or_equal[,2]-p.less_or_equal[,1],2),
-               'P(black)'=round(1-p.less_or_equal[,2],2),
-               'outcome'=c('white','draw','black')[df$y])
-#stats
+The p-value of $0.9607$ suggests again that there are no evidence that the more complicated model `fit.all` is better than the simple model. The AIC for the simple model is:
+```{r}
+c(AIC = AIC(fit.no_rt), AICc = AICc(fit.no_rt))
 ```
 
 \newpage
-### Model 1
+# Testing different relative strengths
 
-Since it could be argued that the given skill level of a player could be the same for playing both white and black, we next consider the model where the effect of playing white is equal to the effect of playing black, meaning $\alpha_j = - \beta_j, \quad j = 1,2,\ldots, k$. This would be a simpler model since there are fewer parameters to estimate. The model becomes
+Since it could be argued that the given skill level of a player could be the same for playing both white and black, we next consider a model where the effect of playing white is equal to the effect of playing black, meaning $\alpha_p = - \beta_p, \quad \forall p \in \text{players}$. This would be a simpler model since there are fewer parameters to estimate. The model becomes
 $$
-u_i = -(\alpha_{w(i)} - \alpha_{b(i)} + \gamma_{t(i)} ) + \varepsilon_i.
+u_i = -(\alpha_{w(i)} - \alpha_{b(i)} ) + \varepsilon_i.
 $$
 
-To make this new model, we will do a dummy-encoding of the players, with value 1 if the player is white and -1 if the player is black. To make the design matrix have full rank, we drop `carlsen`.
+To make this new model, we dummy-encode the players, with value 1 if the player is white and -1 if the player is black. To make the design matrix have full rank, we remove `carlsen` from the formulas.
 ```{r}
 dummy_cols <- fastDummies::dummy_cols
 
-# dummy-encode white, add -1 for black
-df.dummy <- dummy_cols(df, select_columns = "white")
-for(i in 1:nrow(df.dummy)){
-    df.dummy[i, paste("white", df.dummy$black[i], sep="_")] = -1
+df <- dummy_cols(df, select_columns = "white")
+for(i in 1:nrow(df)){
+    df[i, paste("white", df$black[i], sep="_")] = -1
 }
-# remove black, white, white_carlsen
-df.dummy <- subset(df.dummy, select = -c(black, white, white_carlsen))
+df <- subset(df, select = -c(white_carlsen)) # remove carlsen
+# change columns ('white_name' -> 'name')
+colnames(df)[6:10] <- c("firouzja","karjakin", "nepo", "rapport", "tari")
 ```
 
 ```{r}
-# alpha = - beta
-fit10 <- vglm(y ~ . - round,
-              family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
-
-summary(fit10)
-c(AIC = AIC(fit10), AICc = AICc(fit10))
+fit.simple <- vglm(y ~ firouzja + karjakin + nepo + rapport + tari,
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+summary(fit.simple)
+c(AIC = AIC(fit.simple), AICc = AICc(fit.simple))
 ```
+Since `fit.no_rt` and `fit.simple` not nested models (they use different covariates), we cannot use the simple LR test performed earlier. However, comparing `fit.no_rt` with `fit.simple`, we observe that `fit.simple` has a lower AIC, suggesting that it fitted the data better.
 
-Again, we see that `type` has a high p-value, and we therefore consider a model without it:
-```{r}
-fit11 <- vglm(y ~ . - round - type ,
-              family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
-anova(fit10, fit11, type = 1, test = 'LRT')
-```
-
-```{r}
-G2 = deviance(fit11) - deviance(fit10)
-df.diff = df.residual(fit11) - df.residual(fit10) 
-G2
-1 - pchisq(G2, df.diff)
-```
-The test gives no reason to prefer the simpler model, but the values for AIC and AICc are lower:
-```{r}
-c(AIC = AIC(fit11), AICc = AICc(fit11))
-```
-```{r}
-fit.simple3 <- vglm(y ~ . -round, family=cumulative(parallel = FALSE ~ type, link="logitlink"), data = df.dummy)
-summary(fit.simple3)
-AIC(fit.simple3)
-```
-
-
-\newpage
-### Model 2
-\textcolor{red}{I moved this under model 1}
-
-Same as model 1, but here we also assume that there are no effect of type of game played, thus
-$$
-  u_i = -(\alpha_{w(i)} - \alpha_{b(i)}) + \varepsilon_i.
-$$
-
-```{r}
-# alpha = - beta, gamma = 0
-fit.2 <- vglm(y ~ . - type - round,
-              family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
-summary(fit.2)
-c(AIC = AIC(fit.2), AICc = AICc(fit.2))
-```
-
-\newpage
-### Model 3
-
-From the models so far, we see that the model with the lowest AIC and AICc is model 2, the model consisting of only the relative strengths of each player. In the summary, we see that the relative strength of some players are close to one another, in particular "firouzja" and "rapport", but also note that "nepomniachtchi" and "karjakin" are comparable. Let us try fitting a model where we assume that the relative strength of "firouzja" and "rapport" are equal. Thus our model becomes
+From the models so far, we see that the model with the lowest AIC and AICc is `fit.simple`, the model consisting of only the relative strengths of each player. In the summary, we see that the relative strength of some players are close to one another, in particular "firouzja" and "rapport", but also note that "nepomniachtchi" and "karjakin" are comparable. Let us try fitting a model where we assume that the relative strength of "firouzja" and "rapport" are equal. Thus our model becomes
 $$
   u_i = -(\alpha_{w(i)} - \alpha_{b(i)}) + \varepsilon_i,
 $$
-where $\alpha_{\text{firouzja}} = \alpha_{\text{rapport}}$.
+where $\alpha_{\text{firouzja}} = \alpha_{\text{rapport}}$. In R we can make this model by simply adding the columns `firourzja` and `rapport`, as both players cannot play the same color simultaneously. Denote this model by `fit.simple2`. We also define the model where in addition to `firourzja` and `rapport`, we assume that `nepomniachtchi` and `karjakin` also have the same strength. Define this model by `fit.simple3`.
 
 ```{r}
-fit.3 <- vglm(y ~ I(white_firouzja + white_rapport)
-              + white_nepomniachtchi + white_karjakin + white_tari,
-              family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
-summary(fit.3)
-c(AIC = AIC(fit.3), AICc = AICc(fit.3))
+fit.simple2 <- vglm(y ~ I(firouzja + rapport) + nepo + karjakin + tari,
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+c(AIC = AIC(fit.simple2), AICc = AICc(fit.simple2))
 ```
 
-\newpage
-### Model 4
-Let us try fitting a model where we assume that the relative strength of "nepomniachtchi" and "karjakin" are equal. Thus our model becomes
+```{r}
+fit.simple3 <- vglm(y ~ I(firouzja + rapport) + I(nepo + karjakin) + tari,
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+c(AIC = AIC(fit.simple3), AICc = AICc(fit.simple3))
+```
+Then we use the deviance-based LR-test comparing the simple models:
+```{r}
+anova(fit.simple2, fit.simple, type = 1, test = 'LRT')
+anova(fit.simple3, fit.simple, type = 1, test = 'LRT')
+anova(fit.simple2, fit.simple3, type = 1, test = 'LRT')
+```
+Again, we see no clear evidence to suggest that the more complex model is preferred. To test the limit as how simple the model can be made, we define a model where all players except `carlsen` is assumed to have the same strength. Define this model by `fit.simple4`. Thus our model becomes
 $$
   u_i = -(\alpha_{w(i)} - \alpha_{b(i)}) + \varepsilon_i,
 $$
-where $\alpha_{\text{nepomniachtchi}} = \alpha_{\text{karjakin}}$.
-
+where $\alpha_{p} = \alpha_{q}\ \forall p,q \in \text{players} \setminus \{\text{carlsen}\}$.
 
 ```{r}
-fit.4 <- vglm(y ~ I(white_firouzja + white_rapport)
-              + I(white_nepomniachtchi + white_karjakin) + white_tari,
-              family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
-summary(fit.4)
-c(AIC = AIC(fit.4), AICc = AICc(fit.4))
+fit.simple4 <- vglm(y ~ I(firouzja + rapport+ nepo + karjakin + tari),
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+summary(fit.simple4)
+c(AIC = AIC(fit.simple4), AICc = AICc(fit.simple4))
 ```
+The LR-test becomes:
+```{r}
+anova(fit.simple4, fit.simple, type = 1, test = 'LRT')
+```
+This, in turn, gives no clear indication of keeping the more complicated model. However, this might not be accurate, as the model gives higher AIC than `fit.simple2`. A problem with these tests is that we have a small number of observations, and the deviance-based LR-test is not necessarily accurate for so few observations. The best model so far is the model where the relative strengths are divided into four levels of strengths.
 
 \newpage
-### Model 5
-Let us try fitting a model where we assume that the relative strength of all players except 'carlsen' are equal. Thus our model becomes
-$$
-  u_i = -(\alpha_{w(i)} - \alpha_{b(i)}) + \varepsilon_i,
-$$
-where $\alpha_{\text{carlsen}} = 0$ and $\alpha_{\text{not carlsen}} \ne 0$.
-
-```{r}
-fit.5 <- vglm(y ~ I(white_firouzja + white_rapport+ white_nepomniachtchi
-                    + white_karjakin + white_tari),
-              family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
-summary(fit.5)
-c(AIC = AIC(fit.5), AICc = AICc(fit.5))
-```
-
-
-```{r}
-fit.5 <- vglm(y ~ I(white_firouzja + white_rapport+ white_nepomniachtchi
-                    + white_karjakin + white_tari) + type,
-              family=cumulative(parallel = FALSE ~type, link="logitlink"), data=df.dummy)
-c(AIC = AIC(fit.5), AICc = AICc(fit.5))
-```
-
-
 ## Models with rating included
 
 ```{r}
@@ -617,7 +566,12 @@ c(AIC = AIC(fit.7), AICc = AICc(fit.7))
 
 ```
 
-### Performance rating
+
+
+
+
+
+### Performance rating (not include this, and the subsequent parts)
 
 ```{r}
 info = data.frame("carlsen"=c(0,0,0), "firouzja"=c(0,0,0), "rapport"=c(0,0,0),
@@ -677,4 +631,21 @@ summary(fit.8)
 
 c(AIC = AIC(fit.8), AICc = AICc(fit.8))
 
+```
+
+
+```{r, echo = FALSE, eval = F}
+G2 = deviance(fit11) - deviance(fit10)
+df.diff = df.residual(fit11) - df.residual(fit10) 
+G2
+1 - pchisq(G2, df.diff)
+
+# P(u <= theta_1), P(u <= theta_2)
+p.less_or_equal <- plogis(predict(fit.0, df))
+stats <- cbind('white'=df$white, 'black'=df$black,
+               'P(white)'=round(p.less_or_equal[,1],2),
+               'P(draw)'=round(p.less_or_equal[,2]-p.less_or_equal[,1],2),
+               'P(black)'=round(1-p.less_or_equal[,2],2),
+               'outcome'=c('white','draw','black')[df$y])
+#stats
 ```
