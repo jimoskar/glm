@@ -235,12 +235,12 @@ $$
 where  $l_X(\boldsymbol{\beta})$ is the log-likelihood of the original linear model. We implement this 'correction' in the calculation of AIC below: 
 ```{r}
 p = 3
-AIC.linear <- 2*p + 2*(logLik(mod1) - sum(log(mammals$brain)))
-AIC.gamma <- 2*p + 2*logLik(mod.gamma)
+AIC.linear <- 2*p - 2*(logLik(mod1) - sum(log(mammals$brain)))
+AIC.gamma <- 2*p - 2*logLik(mod.gamma)
 AIC.linear
 AIC.gamma
 ```
-We see that the gamma-GLM is superior to the linear mode with respect to AIC.
+We see that the linear model is superior to the gamma-GLM with respect to AIC.
 
 ### Theoretical skew of log of gamma distribution
 
@@ -315,7 +315,7 @@ sample.skew <- m.3/s^3
 sample.skew
 ```
 
-We observe that the estimated skew of the log-gamma distributed variable is negative and larger in absolute value than the sample skew of the residuals of the linear model from (a). This arguably makes the the gamma-GLM unsuitable, since the log-skew does not match the skew of the residuals. However, as previously observed, the gamma-GLM is better with respect to the AIC. Side note: Why do we compare the skew of $\ln Y$ to the sample skew of the residuals from the linear model, i.e. $\ln Y_{\text{lin}} - \ln \widehat{Y}_{\text{lin}}$? The reason is that $Y_{\text{lin}} \sim \mathcal{N}(\boldsymbol{x}_i^T \boldsymbol{\beta}, \sigma^2)$, i.e. its mean depends on the covariates. To remedy this, we subtract the predictions, which gives us the residuals: $\ln Y_{\text{lin}} - \ln \widehat{Y}_{\text{lin}} \sim \mathcal{N}(0, \sigma^2)$. Then we are safe to calculate the sample skew, since the mean is constant.
+We observe that the estimated skew of the log-gamma distributed variable is negative and larger in absolute value than the sample skew of the residuals of the linear model from (a). This arguably makes the the gamma-GLM unsuitable, since the log-skew does not match the skew of the residuals. This agrees with the calculations of AIC done earlier. Side note: Why do we compare the skew of $\ln Y$ to the sample skew of the residuals from the linear model, i.e. $\ln Y_{\text{lin}} - \ln \widehat{Y}_{\text{lin}}$? The reason is that $Y_{\text{lin}} \sim \mathcal{N}(\boldsymbol{x}_i^T \boldsymbol{\beta}, \sigma^2)$, i.e. its mean depends on the covariates. To remedy this, we subtract the predictions, which gives us the residuals: $\ln Y_{\text{lin}} - \ln \widehat{Y}_{\text{lin}} \sim \mathcal{N}(0, \sigma^2)$. Then we are safe to calculate the sample skew, since the mean is constant.
 
 
 \newpage
