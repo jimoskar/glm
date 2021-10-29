@@ -101,7 +101,7 @@ Rearranging, we arrive at
 $$
 P\left(z_h < \underbrace{t_{n'-2,\ \alpha} \cdot s\sqrt{1 + 1/n' + \frac{(v_h - \bar{v})^2}{\sum_{i = 1}^n(v_i-\bar{v})^2}} + \widehat{z}_h}_{=\ \ln U} \right) = 1 - \alpha.
 $$
-Taking both sides of the inequality to the power of $e$, we get
+Raising $e$ to the power of both sides of the inequality, we get
 $$
 P(y_h < U) = 1-\alpha.
 $$
@@ -192,15 +192,7 @@ The likelihood-ratio test for the linear model can be carried out as follows:
 
 ```{r}
 mod1.offset <- lm(log(brain) ~ is.human, offset = 3/4*log(body), data = mammals)
-A <- logLik(mod1.offset)
-B <- logLik(mod1)
-
-X.stat <- -2 * (as.numeric(A)-as.numeric(B))
-p.val <- pchisq(X.stat, df = r, lower.tail = FALSE)
-p.val
-
-# Use this instead? ask about this?
-anova(mod1, mod1.offset, test = 'LRT')
+anova(mod1.offset, mod1, test = 'LRT')
 ```
 
 ### Gamma-GLM
@@ -224,13 +216,10 @@ Next, we perform an LR-test for the GLM:
 mod.gamma.offset <- glm(brain ~ 1 + is.human, family = Gamma(link = "log"),
                         offset = 3/4*log(body), data = mammals) 
 
-A <- logLik(mod.gamma.offset)
-B <- logLik(mod.gamma)
-
-X.stat <- -2 * (as.numeric(A)-as.numeric(B))
-p.val <- pchisq(X.stat, df = r, lower.tail = FALSE)
-p.val
+anova(mod.gamma.offset, mod.gamma, test = "LRT")
 ```
+
+For both the linear model and for the gamma-GLM, there is no evidence that we should reject $H_0$, which support the hypothesis that the relationship $y_i = y_0x_{bi}^{3/4}$ holds.
 
 We observe that the p-values for the Wald and LR-test are almost equal for the linear model, while for the GLM, the difference is larger. The reason behind this is that the LR-test and Wald test are equivalent for the linear model. This can be shown by noting that the Wald-statistic is equal to the F-statistic, since $W = rF = F$ (see Fahrmeir p. 131). The LRT-statistic is, in turn, a strictly monotonic function of the F-statistic, showing that the two tests are equivalent. 
 
@@ -329,10 +318,7 @@ sample.skew <- m.3/s^3
 sample.skew
 ```
 
-We observe that the estimated skew of the log-gamma distributed variable is negative and larger in absolute value than the sample skew of the residuals of the linear model from (a). This arguably makes the linear model more suitable than gamma-GLM, \textcolor{red}{because...}
-
-
-
+We observe that the estimated skew of the log-gamma distributed variable is negative and larger in absolute value than the sample skew of the residuals of the linear model from (a). This arguably makes the the gamma-GLM unsuitable, since the log-skew does not match the skew of th residuals. However, as previously observed, the gamma-GLM is superior with respect to the AIC.
 
 
 \newpage
@@ -524,9 +510,16 @@ The test gives no reason to prefer the simpler model, but the values for AIC and
 ```{r}
 c(AIC = AIC(fit11), AICc = AICc(fit11))
 ```
+```{r}
+fit.simple3 <- vglm(y ~ . -round, family=cumulative(parallel = FALSE ~ type, link="logitlink"), data = df.dummy)
+summary(fit.simple3)
+AIC(fit.simple3)
+```
+
 
 \newpage
 ### Model 2
+\textcolor{red}{I moved this under model 1}
 
 Same as model 1, but here we also assume that there are no effect of type of game played, thus
 $$
@@ -592,6 +585,14 @@ c(AIC = AIC(fit.5), AICc = AICc(fit.5))
 ```
 
 
+```{r}
+fit.5 <- vglm(y ~ I(white_firouzja + white_rapport+ white_nepomniachtchi
+                    + white_karjakin + white_tari) + type,
+              family=cumulative(parallel = FALSE ~type, link="logitlink"), data=df.dummy)
+c(AIC = AIC(fit.5), AICc = AICc(fit.5))
+```
+
+
 
 
 ```{r, eval = FALSE, echo = FALSE}
@@ -618,7 +619,7 @@ fit.simple2 <- vglm(y ~ ., family=cumulative(parallel = TRUE, link="logitlink"),
 AIC(fit.simple2)
 summary(fit.simple2)
 
-fit.simple3 <- vglm(y ~ ., family=cumulative(parallel = FALSE ~ type, link="logitlink"), data=X[2:ncol(X)])
+fit.simple3 <- vglm(y ~ . -round, family=cumulative(parallel = FALSE ~ type, link="logitlink"), data = df.dummy)
 AIC(fit.simple3)
 summary(fit.simple3)
 ```
