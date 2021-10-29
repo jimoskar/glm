@@ -234,7 +234,7 @@ l_Y(\boldsymbol{\beta}) = l_X(\boldsymbol{\beta}) -\sum_{i = 1}^n \ln y_i,
 $$
 where  $l_X(\boldsymbol{\beta})$ is the log-likelihood of the original linear model. We implement this 'correction' in the calculation of AIC below: 
 ```{r}
-p = 3
+p = 3 # Number of parameters estimated in the models.
 AIC.linear <- 2*p - 2*(logLik(mod1) - sum(log(mammals$brain)))
 AIC.gamma <- 2*p - 2*logLik(mod.gamma)
 AIC.linear
