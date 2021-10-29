@@ -101,7 +101,7 @@ Rearranging, we arrive at
 $$
 P\left(z_h < \underbrace{t_{n'-2,\ \alpha} \cdot s\sqrt{1 + 1/n' + \frac{(v_h - \bar{v})^2}{\sum_{i = 1}^n(v_i-\bar{v})^2}} + \widehat{z}_h}_{=\ \ln U} \right) = 1 - \alpha.
 $$
-Taking both sides of the inequality to the power of $e$, we get
+Raising $e$ to the power of both sides of the inequality, we get
 $$
 P(y_h < U) = 1-\alpha.
 $$
@@ -130,8 +130,6 @@ $$
 \hat{\beta}_2 = z_h - \hat{\beta}_0 - \hat{\beta_1}v_h = z_h - \widehat{z}_h.
 $$
 We also note that the estimators $\hat{\beta}_0$ and $\hat{\beta}_1$ are the same here as in the case where we do not consider humans (since the term involving $\boldsymbol{x}_h$ in the log-likelihood evaluates to zero). Thus, since both $T_1$ and $T_2$ depend on the same $\hat{\beta}_2 = z_h - \widehat{z}_h$, meaning that $A$ and $B$ occur when the difference $z_h - \widehat{z}_h$ is large, we can conclude that the two events are equivalent. 
-
-\textcolor{red}{More precise than this?}
 
 ## d)
 For a gamma-distributed random variable, the pdf takes the form
@@ -192,15 +190,7 @@ The likelihood-ratio test for the linear model can be carried out as follows:
 
 ```{r}
 mod1.offset <- lm(log(brain) ~ is.human, offset = 3/4*log(body), data = mammals)
-A <- logLik(mod1.offset)
-B <- logLik(mod1)
-
-X.stat <- -2 * (as.numeric(A)-as.numeric(B))
-p.val <- pchisq(X.stat, df = r, lower.tail = FALSE)
-p.val
-
-# Use this instead? ask about this?
-anova(mod1, mod1.offset, test = 'LRT')
+anova(mod1.offset, mod1, test = 'LRT')
 ```
 
 ### Gamma-GLM
@@ -224,13 +214,10 @@ Next, we perform an LR-test for the GLM:
 mod.gamma.offset <- glm(brain ~ 1 + is.human, family = Gamma(link = "log"),
                         offset = 3/4*log(body), data = mammals) 
 
-A <- logLik(mod.gamma.offset)
-B <- logLik(mod.gamma)
-
-X.stat <- -2 * (as.numeric(A)-as.numeric(B))
-p.val <- pchisq(X.stat, df = r, lower.tail = FALSE)
-p.val
+anova(mod.gamma.offset, mod.gamma, test = "LRT")
 ```
+
+For both the linear model and for the gamma-GLM, there is no evidence that we should reject $H_0$, which supports the hypothesis that the relationship $y_i = y_0x_{bi}^{3/4}$ holds.
 
 We observe that the p-values for the Wald and LR-test are almost equal for the linear model, while for the GLM, the difference is larger. The reason behind this is that the LR-test and Wald test are equivalent for the linear model. This can be shown by noting that the Wald-statistic is equal to the F-statistic, since $W = rF = F$ (see Fahrmeir p. 131). The LRT-statistic is, in turn, a strictly monotonic function of the F-statistic, showing that the two tests are equivalent. 
 
@@ -329,10 +316,7 @@ sample.skew <- m.3/s^3
 sample.skew
 ```
 
-We observe that the estimated skew of the log-gamma distributed variable is negative and larger in absolute value than the sample skew of the residuals of the linear model from (a). This arguably makes the linear model more suitable than gamma-GLM, \textcolor{red}{because...}
-
-
-
+We observe that the estimated skew of the log-gamma distributed variable is negative and larger in absolute value than the sample skew of the residuals of the linear model from (a). This arguably makes the the gamma-GLM unsuitable, since the log-skew does not match the skew of th residuals. However, as previously observed, the gamma-GLM is superior with respect to the AIC. Side note: Why do we compare the skew of $\ln Y$ to the sample skew of the residuals from the linear model, i.e. $\ln Y_{\text{lin}} - \ln \widehat{Y}_{\text{lin}}$? The reason is that $Y_{\text{lin}} \sim \mathcal{N}(\boldsymbol{x}_i^T \boldsymbol{\beta}, \sigma^2)$, i.e. its mean depends on the covariates. To remedy this, we subtract the predictions, which gives us the residuals: $\ln Y_{\text{lin}} - \ln \widehat{Y}_{\text{lin}} \sim \mathcal{N}(0, \sigma^2)$. Then we are safe to calculate the sample skew.
 
 
 \newpage
@@ -453,12 +437,29 @@ library(VGAM)
 # change "classic" to reference type
 df <- within(df, type <- relevel(type, ref = "classic"))
 
-fit.0 <- vglm(y ~ white + black + type,
+fit00<- vglm(y ~ white + black + type,
               family=cumulative(parallel = TRUE, link="logitlink"), data=df)
 
-c(AIC = AIC(fit.0), AICc = AICc(fit.0))
+c(AIC = AIC(fit00), AICc = AICc(fit00))
+anova(fit00, type = 3, test = "LRT")
+summary(fit00)
 ```
-```{r, echo = FALSE}
+
+From the summary, we observe that `type` has a high p-value, so we try to fit a model without a `type` covariate and compare the models with a deviance-based test.
+```{r}
+fit01 <-  vglm(y ~ white + black,
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+anova(fit01, fit00, type = 1, test = 'LRT')
+```
+The test does not yield evidence that the model without `type` is more suitable, but the AIC and AICc are lower:
+
+```{r}
+c(AIC = AIC(fit01), AICc = AICc(fit01))
+```
+
+
+
+```{r, echo = FALSE, eval = F}
 # P(u <= theta_1), P(u <= theta_2)
 p.less_or_equal <- plogis(predict(fit.0, df))
 stats <- cbind('white'=df$white, 'black'=df$black,
@@ -477,7 +478,7 @@ $$
 u_i = -(\alpha_{w(i)} - \alpha_{b(i)} + \gamma_{t(i)} ) + \varepsilon_i.
 $$
 
-To make this new model, we will do a dummy-encoding of the players, with value 1 if the player is white and -1 if the player is black. To make the design matrix full rank, we drop `carlsen`.
+To make this new model, we will do a dummy-encoding of the players, with value 1 if the player is white and -1 if the player is black. To make the design matrix have full rank, we drop `carlsen`.
 ```{r}
 dummy_cols <- fastDummies::dummy_cols
 
@@ -492,14 +493,40 @@ df.dummy <- subset(df.dummy, select = -c(black, white, white_carlsen))
 
 ```{r}
 # alpha = - beta
-fit.1 <- vglm(y ~ . - round,
+fit10 <- vglm(y ~ . - round,
               family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
-s <- summary(fit.1)
-c(AIC = AIC(fit.1), AICc = AICc(fit.1))
+
+summary(fit10)
+c(AIC = AIC(fit10), AICc = AICc(fit10))
 ```
+
+Again, we see that `type` has a high p-value, and we therefore consider a model without it:
+```{r}
+fit11 <- vglm(y ~ . - round - type ,
+              family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
+anova(fit10, fit11, type = 1, test = 'LRT')
+```
+
+```{r}
+G2 = deviance(fit11) - deviance(fit10)
+df.diff = df.residual(fit11) - df.residual(fit10) 
+G2
+1 - pchisq(G2, df.diff)
+```
+The test gives no reason to prefer the simpler model, but the values for AIC and AICc are lower:
+```{r}
+c(AIC = AIC(fit11), AICc = AICc(fit11))
+```
+```{r}
+fit.simple3 <- vglm(y ~ . -round, family=cumulative(parallel = FALSE ~ type, link="logitlink"), data = df.dummy)
+summary(fit.simple3)
+AIC(fit.simple3)
+```
+
 
 \newpage
 ### Model 2
+\textcolor{red}{I moved this under model 1}
 
 Same as model 1, but here we also assume that there are no effect of type of game played, thus
 $$
@@ -565,6 +592,14 @@ c(AIC = AIC(fit.5), AICc = AICc(fit.5))
 ```
 
 
+```{r}
+fit.5 <- vglm(y ~ I(white_firouzja + white_rapport+ white_nepomniachtchi
+                    + white_karjakin + white_tari) + type,
+              family=cumulative(parallel = FALSE ~type, link="logitlink"), data=df.dummy)
+c(AIC = AIC(fit.5), AICc = AICc(fit.5))
+```
+
+
 
 
 ```{r, eval = FALSE, echo = FALSE}
@@ -591,7 +626,7 @@ fit.simple2 <- vglm(y ~ ., family=cumulative(parallel = TRUE, link="logitlink"),
 AIC(fit.simple2)
 summary(fit.simple2)
 
-fit.simple3 <- vglm(y ~ ., family=cumulative(parallel = FALSE ~ type, link="logitlink"), data=X[2:ncol(X)])
+fit.simple3 <- vglm(y ~ . -round, family=cumulative(parallel = FALSE ~ type, link="logitlink"), data = df.dummy)
 AIC(fit.simple3)
 summary(fit.simple3)
 ```
