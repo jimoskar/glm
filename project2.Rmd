@@ -82,11 +82,11 @@ T.1 <- beta.2.hat/(s*sqrt(XtX.inv[3,3]))
 p.val <- pt(T.1, n - p, lower.tail = F)
 p.val
 ```
-The calculated p-value is `r p.val`. The low p-value implies that the difference between human brain size and expected brain size of mammals with the same body mass is positive.
+The calculated p-value is `r p.val`.
 
 ## c)
 
-We now consider all non-human mammals and construct a one-sided prediction interval for the human brain size. For ease of notation, we define $z_i := \ln y_i$ and $v_i = \ln(x_{bi})$. We also let $n' = n -1$ as the number of observations (since we exclude the observation of humans). Now,  $z_h = \beta_0 + \beta_1 v_h + \varepsilon_h$ is the stochastic variable from which the log of the human brain mass is realized and $\hat{z}_h = \hat{\beta}_0 + \hat{\beta}_1v_h$ is the corresponding estimate. Then we can find the pivotal quantity
+We now consider all non-human mammals and construct a one-sided prediction interval for the human brain size. For ease of notation, we define $z_i := \ln y_i$ and $v_i = \ln(x_{bi})$. We also let $n' = n -1$ as the number of observations (since we exclude humans). Now,  $z_h = \beta_0 + \beta_1 v_h + \varepsilon_h$ is the stochastic variable from which the log of the human brain mass is realized and $\hat{z}_h = \hat{\beta}_0 + \hat{\beta}_1v_h$ is the corresponding estimate. Then we can find the pivotal quantity
 
 $$
 T_2 = \frac{z_h - \widehat{z}_h}{s\sqrt{1 + 1/n' + \frac{(v_h - \bar{v})^2}{\sum_{i = 1}^{n'}(v_i-\bar{v})^2}}} \sim t_{n' -2}.
@@ -101,12 +101,12 @@ Rearranging, we arrive at
 $$
 P\left(z_h < \underbrace{t_{n'-2,\ \alpha} \cdot s\sqrt{1 + 1/n' + \frac{(v_h - \bar{v})^2}{\sum_{i = 1}^n(v_i-\bar{v})^2}} + \widehat{z}_h}_{=\ \ln U} \right) = 1 - \alpha.
 $$
-
 Raising $e$ to the power of both sides of the inequality, we get
 $$
 P(y_h < U) = 1-\alpha.
 $$
 In accordance with the task description, we define
+
 $$
 A = \{y_h \notin (-\infty,\ U)\} = \{y_h \ge U\}, \quad \text{and} \quad B = \{ T_1 \ge t_{n-p,\ \alpha}\}
 $$
@@ -136,25 +136,25 @@ For a gamma-distributed random variable, the pdf takes the form
 $$
 f(x; a,b) = \frac{b^a}{\Gamma(a)} x^{a-1}e^{-bx}.
 $$
-Using the parametrization $\mu = \frac{a}{b}$ and $\nu = a$, we construct the GLM with a log-link as follows;
+Using the parametrization $\mu = \frac{a}{b}$ and $\nu = a$, we construct the GLM with a log-link as follows.
 $$
 y_i \sim \mathrm{Gamma}(\mu_i,\ \nu_i),
 $$
-with $\text{E}[y_i] = \mu_i$, such that
+with $\text{E}[Y_i] = \mu_i$, such that
 $$
 \ln(\mu_i) = \eta_i = \boldsymbol{x}_i^T \boldsymbol{\beta}.
 $$
-Next, we fit the model:
+Next, we fit the model (note that we use the logarithm of the body mass):
 ```{r}
-mod.gamma <- glm(brain ~ log(body) + is.human, family = Gamma(link="log"), data = mammals)
+mod.gamma <- glm(brain ~ log(body) + is.human, family = Gamma(link = "log"), data = mammals)
 summary(mod.gamma)
 ```
 
 
 ## e)
-Using the same notation as before, we want to test whether the following relationship holds;
+We want to test whether the following relationship holds (recall earlier notation):
 $$
-y_i = y_0\ x_{bi}^{3/4},
+y_i = y_0x_{bi}^{3/4},
 $$
 where $y_i$ is the brain mass, $y_0$ is a constant and $x_{bi}$ is the body mass. Since this is equivalent to testing
 
@@ -194,7 +194,7 @@ anova(mod1.offset, mod1, test = 'LRT')
 ```
 
 ### Gamma-GLM
-Next we consider the GLM from (d). For a generalized linear model, the Wald statistic can be written as
+For a generalized linear model, the Wald statistic can be written as
 
 $$
 w =(C\hat{\boldsymbol{\beta}} - d)^T[CF^{-1}(\hat{\boldsymbol{\beta}})C^T]^{-1}(C\hat{\boldsymbol{\beta}} - d),
@@ -209,7 +209,7 @@ p.val <- pchisq(w, r, lower.tail = FALSE)
 p.val
 ```
 
-The liklihood-ratio test for the GLM can be carried out as follows:
+Next, we perform an LR-test for the GLM:
 ```{r}
 mod.gamma.offset <- glm(brain ~ 1 + is.human, family = Gamma(link = "log"),
                         offset = 3/4*log(body), data = mammals) 
@@ -219,16 +219,18 @@ anova(mod.gamma.offset, mod.gamma, test = "LRT")
 
 For both the linear model and for the gamma-GLM, there is no evidence that we should reject $H_0$, which supports the hypothesis that the relationship $y_i = y_0x_{bi}^{3/4}$ holds.
 
-We observe that the p-values for the Wald and LR-test are almost equal for the linear model, while for the GLM, the difference is larger. The reason behind this is that the LR-test and Wald test are equivalent for the linear model. This can be shown by noting that the Wald-statistic is equal to the F-statistic, since $W = rF = F$ (see Fahrmeir p. 131). The LRT-statistic is, in turn, a strictly monotonic function of the F-statistic, showing that the two tests are equivalent. 
+We observe that the p-values for the Wald and LR-test are essentially equal for the linear model, while for the GLM, the difference in p-values is notable. The reason behind this is that the LR-test and Wald test are equivalent for the linear model. This can be shown by noting that the Wald-statistic is equal to the F-statistic, since $W = rF = F$ (see Fahrmeir p. 131). The LRT-statistic is, in turn, is a strictly monotonic function of the F-statistic, which shows that the two tests are equivalent. 
 
 For the GLM, on the other hand, this is not the case, and even though the Wald test-statistic, $w$, and the LRT-statistic, $lr$, are asymptotically equivalent, where $w,lr \overset{a}{\sim} \chi^2_r$ (Fahrmeir p. 664), they can give quite different results for finite samples. The likelihood ratio test is generally considered more reliable, which is connected to the fact that it considers the model under both hypotheses, while the Wald test only considers the model under the alternative hypothesis. Other reasons to prefer the LR-test are listed [\textcolor{blue}{here}](https://en.wikipedia.org/wiki/Wald_test#Alternatives_to_the_Wald_test).
 
 # f)
 We need to be careful comparing the log-likelihoods and hence the AICs of the models, because for the GLM we consider $Y \sim \mathrm{Gamma}$, while in the linear model we consider $\ln Y\sim \mathrm{Normal}$. To make them comparable, we define $X:= \ln(Y)$. Then (for the linear model) $Y = e^X$ and the Jacobian transformation yields a density of
+
 $$
 f_Y(y) = \left|\frac{\partial x}{\partial y}\right| f_X(x) = \frac{1}{y}f_X(x).
 $$
-The connection between the log-likelihoods are thus
+This then yields a log-likelihood:
+
 $$
 l_Y(\boldsymbol{\beta}) = l_X(\boldsymbol{\beta}) -\sum_{i = 1}^n \ln y_i,
 $$
@@ -242,7 +244,7 @@ AIC.gamma
 ```
 We see that the gamma-GLM is superior to the linear mode with respect to AIC.
 
-### Theoretical skew of log of gamma distribution
+### Theoretical skew of log of gamma distribution:
 
 Let $Y$ be gamma distributed with shape parameter $a$ and rate parameter $b$.
 The moment generating function for $\ln Y$ is
@@ -294,18 +296,18 @@ a <- 1/phi
 theory.skew <- psi(2,a) / (psi(1,a))^(3/2)
 theory.skew
 ```
-This gives the estimate for the skew of the log mammalian brain size given the body size as `r theory.skew`.
+This gives the estimate for the skew of the log mammalian brain size  as `r theory.skew`.
 
 
-### Sample skew of residuals from the LM
+### Sample skew of residuals from the LM in (a):
 
-The sample skew of a vector $x$ is defined as
+The sample skew is defined as
 $$
-  \text{Sample skew} := \frac{\frac1n \sum_{i=1}^{n}\left(x_i-\bar x\right)^3}{\left[\frac1{n-1} \sum_{i=1}^{n}\left(x_i-\bar x\right)^2\right]^{3/2}},
+  \text{Sample skew} := \frac{\frac1n \sum_{i=1}^{n}\left(x_i-\bar x\right)^3}{\left[\frac1{n-1} \sum_{i=1}^{n}\left(x_i-\bar x\right)^2\right]^{3/2}}.
 $$
-where $\bar x$ is the mean. For the linear model fitted in (a), we calculate the sample skew of the residuals:
+For the linear model fitted in a), we calculate the sample skew of the residuals:
 ```{r}
-# residuals from LM
+# residuals from LM in a)
 x <- residuals(mod0)
 
 m.3 <- 1/length(x) * sum((x - mean(x))^3)
@@ -315,7 +317,7 @@ sample.skew <- m.3/s^3
 sample.skew
 ```
 
-We observe that the estimated skew of the log-gamma distributed variable is negative and larger in absolute value than the sample skew of the residuals of the linear model from (a). This arguably makes the the gamma-GLM unsuitable, since the log-skew does not match the skew of the residuals. However, as previously observed, the gamma-GLM is better with respect to the AIC. Side note: Why do we compare the skew of $\ln Y$ to the sample skew of the residuals from the linear model, i.e. $\ln Y_{\text{lin}} - \ln \widehat{Y}_{\text{lin}}$? The reason is that $Y_{\text{lin}} \sim \mathcal{N}(\boldsymbol{x}_i^T \boldsymbol{\beta}, \sigma^2)$, i.e. its mean depends on the covariates. To remedy this, we subtract the predictions, which gives us the residuals: $\ln Y_{\text{lin}} - \ln \widehat{Y}_{\text{lin}} \sim \mathcal{N}(0, \sigma^2)$. Then we are safe to calculate the sample skew, since the mean is constant.
+We observe that the estimated skew of the log-gamma distributed variable is negative and larger in absolute value than the sample skew of the residuals of the linear model from (a). This arguably makes the the gamma-GLM unsuitable, since the log-skew does not match the skew of the residuals. However, as previously observed, the gamma-GLM is superior with respect to the AIC. Side note: Why do we compare the skew of $\ln Y$ to the sample skew of the residuals from the linear model, i.e. $\ln Y_{\text{lin}} - \ln \widehat{Y}_{\text{lin}}$? The reason is that $Y_{\text{lin}} \sim \mathcal{N}(\boldsymbol{x}_i^T \boldsymbol{\beta}, \sigma^2)$, i.e. its mean depends on the covariates. To remedy this, we subtract the predictions, which gives us the residuals: $\ln Y_{\text{lin}} - \ln \widehat{Y}_{\text{lin}} \sim \mathcal{N}(0, \sigma^2)$. Then we are safe to calculate the sample skew.
 
 
 \newpage
@@ -356,7 +358,7 @@ This means that our model returns that white wins whenever $u_i \le \theta_1$, d
 
 Our data set consists of $n=44$ chess matches played with six players, where the set of players are
 $$
-  \text{players} = \{\text{carlsen},\ \text{firouzja},\ \text{karjakin},\ \text{nepomniachtchi},\ \text{rapport},\ \text{tari}\}.
+  \text{P} = \{\text{carlsen},\ \text{firouzja},\ \text{karjakin},\ \text{nepomniachtchi},\ \text{rapport},\ \text{tari}\}.
 $$
 To get a better understanding of the data set, we give a recap of the tournament regulations. The matches was played over 10 rounds of classical games. The event was a double round-robin, meaning that two players played against each other in two separate rounds, one time with the white pieces and the other time with black. If the result of a the classical game was a draw, then the two players faced each other again to play an armageddon game with the same pieces as in the classical game. In each round, the six players played the three classical games simultaneously. In total, this results in 30 classical games. The remaining 14 comes from the armageddon games.
 
@@ -380,8 +382,6 @@ df
 
 # Assumptions about the residuals
 
-In our analysis, we will consider two different distributions of the data. Both 
-
 ### Propositional odds model / Cummulative Logit
 
 $$
@@ -397,6 +397,11 @@ $$
 $$
 Using a cumulative probit model, the residuals are normally distributed.
 
+### Cumulative Gumbel
+
+$$
+  F(x) = e^{-e^{x}}, \quad \epsilon_i \sim \text{Gumbel}(x; 0, 1) = e^{-(x+e^{-x})}
+$$
 
 ### AICc
 
@@ -406,14 +411,6 @@ $$
 $$
 where it is usually assumed that the residuals are normally distributed. We will ignore this for now, although this is not the case for the cumulative logit and Gumbel models.
 
-
-### Liklihood ratio test based on change in deviance
-
-For two nested models $M_i$ and $M_j$, where $M_i$ contains the parameters in $M_j$ and an additional $k$ parameters. Then under the null hypothesis that $M_i$ is the true model, then, based on Wilk's theorem, it follows that the change in deviance between the two models is approximately chi-squared distributed with $k$ degrees of freedom. This can be written as
-$$
-  \Delta D = D_i - D_j \overset{\text{approx}}{\sim} \chi^2_{k},
-$$
-which can later be used for hypothesis testing using the inbuilt pchisq()-function.
 
 
 \newpage
@@ -491,7 +488,6 @@ df.dummy <- subset(df.dummy, select = -c(black, white, white_carlsen))
 # alpha = - beta
 fit10 <- vglm(y ~ . - round,
               family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
-
 summary(fit10)
 c(AIC = AIC(fit10), AICc = AICc(fit10))
 ```
@@ -596,85 +592,34 @@ c(AIC = AIC(fit.5), AICc = AICc(fit.5))
 ```
 
 
-## Models with rating included
 
-```{r}
-rating = data.frame("carlsen"=2855, "firouzja"=2754, "rapport"=2760,
-            "nepomniachtchi"=2792, "karjakin"=2758, "tari"=2642)
 
-for(i in 1:nrow(df)){
-  df[i,"rating_white"] = rating[df[i,"white"]]
-  df[i,"rating_black"] = rating[df[i,"black"]]
-}
-```
-
-```{r}
-fit.7 <- vglm(y ~ I(rating_white - rating_black) + I((rating_white - rating_black)**3),
-              family=cumulative(parallel = TRUE, link="logitlink"), data=df)
-summary(fit.7)
-
-c(AIC = AIC(fit.7), AICc = AICc(fit.7))
-
-```
-
-### Performance rating
-
-```{r}
-info = data.frame("carlsen"=c(0,0,0), "firouzja"=c(0,0,0), "rapport"=c(0,0,0),
-                                 "nepomniachtchi"=c(0,0,0), "karjakin"=c(0,0,0), "tari"=c(0,0,0))
-# 1: total_opponents_rating
-# 2: wins - losses
-# 3: n_games
-
-info
+```{r, eval = FALSE, echo = FALSE}
+X = data.frame(matrix(0, nrow(df), nlevels(df$black)))
+colnames(X) <- levels(df$black)
 
 for(i in 1:nrow(df)){
-  # white win
-  if(df[i,'y']==1){
-    winner <- as.character(df$white[i])
-    looser <- as.character(df$black[i])
-    
-    info[1:3,winner] = info[,winner] + c(as.numeric(rating[looser]), 1, 1)
-    info[1:3,looser] = info[,looser] + c(as.numeric(rating[winner]),-1, 1)
-  }
-  # black win
-  else if(df[i,'y']==3){
-    winner <- as.character(df$black[i])
-    looser <- as.character(df$white[i])
-    
-    info[1:3,winner] = info[,winner] + c(as.numeric(rating[looser]), 1, 1)
-    info[1:3,looser] = info[,looser] + c(as.numeric(rating[winner]),-1, 1)
-  }
-  # draw
-  else {
-    winner <- as.character(df$black[i])
-    looser <- as.character(df$white[i])
-    
-    info[1:3,winner] = info[,winner] + c(as.numeric(rating[looser]), 0, 1)
-    info[1:3,looser] = info[,looser] + c(as.numeric(rating[winner]), 0, 1)
-  }
+  black = as.character(df$black[i])
+  white = as.character(df$white[i])
+  X[i,black] = 1
+  X[i, white] = -1
 }
+X$y = df$y
 
-performance = data.frame("carlsen"=0, "firouzja"=0, "rapport"=0,
-            "nepomniachtchi"=0, "karjakin"=0, "tari"=0)
+fit.simple <- vglm(y ~ ., family=cumulative(parallel = TRUE, link="logitlink"), data=X[2:ncol(X)])
+summary(fit.simple)
+anova(fit, fit.simple, test = "LRT", type = 1)
+AIC(fit.simple)
+df.residual(fit)
 
-for(name in colnames(info)){
-  performance[name] = (info[1,name] + 400*info[2,name])/(info[3,name])
-}
+# Simple with type
+X$type = df$type
+fit.simple2 <- vglm(y ~ ., family=cumulative(parallel = TRUE, link="logitlink"), data=X[2:ncol(X)])
+AIC(fit.simple2)
+summary(fit.simple2)
 
-# add performance
-for(i in 1:nrow(df)){
-  df[i,"performance_white"] = performance[df[i,"white"]]
-  df[i,"performance_black"] = performance[df[i,"black"]]
-}
+fit.simple3 <- vglm(y ~ . -round, family=cumulative(parallel = FALSE ~ type, link="logitlink"), data = df.dummy)
+AIC(fit.simple3)
+summary(fit.simple3)
 ```
 
-
-```{r}
-fit.8 <- vglm(y ~ I(performance_white - performance_black),
-              family=cumulative(parallel = TRUE, link="logitlink"), data=df)
-summary(fit.8)
-
-c(AIC = AIC(fit.8), AICc = AICc(fit.8))
-
-```
