@@ -82,7 +82,7 @@ T.1 <- beta.2.hat/(s*sqrt(XtX.inv[3,3]))
 p.val <- pt(T.1, n - p, lower.tail = F)
 p.val
 ```
-The calculated p-value is `r p.val`. The low p-value implies that the difference between human brain size and expected brain size of mammals with the same body mass is positive.
+The calculated p-value is `r p.val`. The low p-value indicates that the difference between human brain size and expected brain size of mammals with the same body mass is positive.
 
 ## c)
 
@@ -219,7 +219,7 @@ anova(mod.gamma.offset, mod.gamma, test = "LRT")
 
 For both the linear model and for the gamma-GLM, there is no evidence that we should reject $H_0$, which supports the hypothesis that the relationship $y_i = y_0x_{bi}^{3/4}$ holds.
 
-We observe that the p-values for the Wald and LR-test are almost equal for the linear model, while for the GLM, the difference is larger. The reason behind this is that the LR-test and Wald test are equivalent for the linear model. This can be shown by noting that the Wald-statistic is equal to the F-statistic, since $W = rF = F$ (see Fahrmeir p. 131). The LRT-statistic is, in turn, a strictly monotonic function of the F-statistic, showing that the two tests are equivalent. 
+We observe that the p-values for the Wald and LR-test are essentially equal for the linear model, while for the GLM, the difference is notable. The reason behind this is that the LR-test and Wald test are equivalent for the linear model. This can be shown by noting that the Wald-statistic is equal to the F-statistic, since $W = rF = F$ (see Fahrmeir p. 131). The LRT-statistic is, in turn, a strictly monotonic function of the F-statistic, which shows that the two tests are equivalent. 
 
 For the GLM, on the other hand, this is not the case, and even though the Wald test-statistic, $w$, and the LRT-statistic, $lr$, are asymptotically equivalent, where $w,lr \overset{a}{\sim} \chi^2_r$ (Fahrmeir p. 664), they can give quite different results for finite samples. The likelihood ratio test is generally considered more reliable, which is connected to the fact that it considers the model under both hypotheses, while the Wald test only considers the model under the alternative hypothesis. Other reasons to prefer the LR-test are listed [\textcolor{blue}{here}](https://en.wikipedia.org/wiki/Wald_test#Alternatives_to_the_Wald_test).
 
@@ -234,13 +234,13 @@ l_Y(\boldsymbol{\beta}) = l_X(\boldsymbol{\beta}) -\sum_{i = 1}^n \ln y_i,
 $$
 where  $l_X(\boldsymbol{\beta})$ is the log-likelihood of the original linear model. We implement this 'correction' in the calculation of AIC below: 
 ```{r}
-p = 3
-AIC.linear <- 2*p + 2*(logLik(mod1) - sum(log(mammals$brain)))
-AIC.gamma <- 2*p + 2*logLik(mod.gamma)
+p = 3 # Number of parameters estimated in the models.
+AIC.linear <- 2*p - 2*(logLik(mod1) - sum(log(mammals$brain)))
+AIC.gamma <- 2*p - 2*logLik(mod.gamma)
 AIC.linear
 AIC.gamma
 ```
-We see that the gamma-GLM is superior to the linear mode with respect to AIC.
+We see that the linear model is superior to the gamma-GLM with respect to AIC.
 
 ### Theoretical skew of log of gamma distribution
 
@@ -315,7 +315,7 @@ sample.skew <- m.3/s^3
 sample.skew
 ```
 
-We observe that the estimated skew of the log-gamma distributed variable is negative and larger in absolute value than the sample skew of the residuals of the linear model from (a). This arguably makes the the gamma-GLM unsuitable, since the log-skew does not match the skew of the residuals. However, as previously observed, the gamma-GLM is better with respect to the AIC. Side note: Why do we compare the skew of $\ln Y$ to the sample skew of the residuals from the linear model, i.e. $\ln Y_{\text{lin}} - \ln \widehat{Y}_{\text{lin}}$? The reason is that $Y_{\text{lin}} \sim \mathcal{N}(\boldsymbol{x}_i^T \boldsymbol{\beta}, \sigma^2)$, i.e. its mean depends on the covariates. To remedy this, we subtract the predictions, which gives us the residuals: $\ln Y_{\text{lin}} - \ln \widehat{Y}_{\text{lin}} \sim \mathcal{N}(0, \sigma^2)$. Then we are safe to calculate the sample skew, since the mean is constant.
+We observe that the estimated skew of the log-gamma distributed variable is negative and larger in absolute value than the sample skew of the residuals of the linear model from (a). This arguably makes the the gamma-GLM unsuitable, since the log-skew does not match the skew of the residuals. This agrees with the calculations of AIC done earlier. Side note: Why do we compare the skew of $\ln Y$ to the sample skew of the residuals from the linear model, i.e. $\ln Y_{\text{lin}} - \ln \widehat{Y}_{\text{lin}}$? The reason is that $Y_{\text{lin}} \sim \mathcal{N}(\boldsymbol{x}_i^T \boldsymbol{\beta}, \sigma^2)$, i.e. its mean depends on the covariates. To remedy this, we subtract the predictions, which gives us the residuals: $\ln Y_{\text{lin}} - \ln \widehat{Y}_{\text{lin}} \sim \mathcal{N}(0, \sigma^2)$. Then we are safe to calculate the sample skew, since the mean is constant.
 
 
 \newpage
