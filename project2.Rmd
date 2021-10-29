@@ -427,6 +427,14 @@ $$
 where it is usually assumed that the residuals are normally distributed. We will ignore this for now, although this is not the case for the cumulative logit and Gumbel models.
 
 
+### Liklihood ratio test based on change in deviance
+
+For two nested models $M_i$ and $M_j$, where $M_i$ contains the parameters in $M_j$ and an additional $k$ parameters. Then under the null hypothesis that $M_i$ is the true model, then, based on Wilk's theorem, it follows that the change in deviance between the two models is approximately chi-squared distributed with $k$ degrees of freedom. we have that
+$$
+  \Delta D = D_i - D_j \overset{\text{approx}}{\sim} \chi^2_{k},
+$$
+which can be used for
+
 
 \newpage
 # Cumulative logit models without interactions
@@ -486,7 +494,7 @@ df.dummy <- subset(df.dummy, select = -c(black, white, white_carlsen))
 # alpha = - beta
 fit.1 <- vglm(y ~ . - round,
               family=cumulative(parallel = TRUE, link="logitlink"), data=df.dummy)
-summary(fit.1)
+s <- summary(fit.1)
 c(AIC = AIC(fit.1), AICc = AICc(fit.1))
 ```
 
