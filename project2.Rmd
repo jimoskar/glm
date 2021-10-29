@@ -492,7 +492,7 @@ fit.simple <- vglm(y ~ firouzja + karjakin + nepo + rapport + tari,
 summary(fit.simple)
 c(AIC = AIC(fit.simple), AICc = AICc(fit.simple))
 ```
-Since `fit.no_rt` and `fit.simple` not nested models (they use different covariates), we cannot use the simple LR test performed earlier. However, comparing `fit.no_rt` with `fit.simple`, we observe that `fit.simple` has a lower AIC, suggesting that it fitted the data better.
+Since `fit.no_rt` and `fit.simple` not nested models (they use different covariates), we cannot use the simple LR-test performed earlier. However, comparing `fit.no_rt` with `fit.simple`, we observe that `fit.simple` has a lower AIC, suggesting that it fitted the data better.
 
 From the models so far, we see that the model with the lowest AIC and AICc is `fit.simple`, the model consisting of only the relative strengths of each player. In the summary, we see that the relative strength of some players are close to one another, in particular "firouzja" and "rapport", but also note that "nepomniachtchi" and "karjakin" are comparable. Let us try fitting a model where we assume that the relative strength of "firouzja" and "rapport" are equal. Thus our model becomes
 $$
@@ -535,6 +535,7 @@ anova(fit.simple4, fit.simple, type = 1, test = 'LRT')
 ```
 This, in turn, gives no clear indication of keeping the more complicated model. However, this might not be accurate, as the model gives higher AIC than `fit.simple2`. A problem with these tests is that we have a small number of observations, and the deviance-based LR-test is not necessarily accurate. The best model so far is the `fit.simple4`, where we in effect have four levels of strengths.
 
+\newpage
 # Testing player interactions with color, round and type
 
 Next we want to test some models where there are interactions among players and certain aspects. Since the players potentially have different playing styles, we want to test whether some players do particularly well when playing with white compared to playing with black. To do so, we add a column for each player indicating if they play with white or black using dummy-encoding. From the summary of `fit.all`, we see that three players had p-values $<0.2$ for playing with white. These players are `nepomniachtchi`, `karjakin` and `tari`. Using the model `fit.simple` as the base model, we try adding the interaction between playing white for these players:
@@ -547,7 +548,7 @@ fit.interaction.color <- vglm(y ~ firouzja + rapport + nepo + karjakin + tari +
 c(AIC = AIC(fit.interaction.color), AICc = AICc(fit.interaction.color))
 anova(fit.interaction.color, fit.simple, type = 1, test = 'LRT')
 ```
-The higher AIC and LR test suggests that this model does not perform any better.
+The higher AIC and LR-test gives no evidence for selecting the more complicated model.
 
 Next we test the interaction between player and round. The intuition behind this is that the players may become tired during the event, or might loose or gain motivation. To test this effect, we include an interaction between the players and the round in the event. Since we only care if the player is present or not, we have to take the absolute value. (if not the effect is reversed for playing black). Define this model:
 ```{r}
@@ -560,8 +561,8 @@ summary(fit.interaction.round)
 The summary gives a p-value $<0.2$ for the players `carlsen`, `nepomniachtchi` and `tari`, with the p-value for `nepomniachtchi` being below $0.1$. Judging by the sign of the fitted parameters, this model suggests that `carlsen` played better towards the end of the event, while `nepomniachtchi` and `tari` worsened their play.
 Let's try fitting a model with the interaction present for only `nepomniachtchi` first:
 ```{r}
-fit.interaction.round_nepo <- vglm(y ~ firouzja + rapport + nepo + karjakin + tari + abs(nepo):round,
-                        family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+fit.interaction.round_nepo <- vglm(y ~ firouzja + rapport + nepo + karjakin + tari
+         + abs(nepo):round, family=cumulative(parallel = TRUE, link="logitlink"), data=df)
 c(AIC = AIC(fit.interaction.round_nepo), AICc = AICc(fit.interaction.round_nepo))
 anova(fit.interaction.round_nepo, fit.simple, type = 1, test = 'LRT')
 ```
@@ -585,13 +586,20 @@ summary(fit.interaction.type_karjakin)
 c(AIC = AIC(fit.interaction.type_karjakin), AICc = AICc(fit.interaction.type_karjakin))
 anova(fit.interaction.type_karjakin, fit.simple, type = 1, test = 'LRT')
 ```
-From the LR-tets, we see that there are evidence for rejecting `fit.simple` in favor of the new model including this interaction.
-
-# better one ?
+From the LR-tets, we see that there are evidence for rejecting `fit.simple` in favor of the new model including the interaction between player `karjakin` and `type` of game played. As seen in the summary of this model, we note that the playing strength of `firouzja` and `rapport` are again comparable. As a last test, let's the current best model where we assume that the playing strength of these two players are equal. Define this model as `fit.last` and compare it with the current model:
 ```{r}
-fit.best <- vglm(y ~ I(firouzja + rapport) + nepo + karjakin + tari + karjakin:type,
+fit.last <- vglm(y ~ I(firouzja + rapport) + nepo + karjakin + tari + karjakin:type,
                     family=cumulative(parallel = TRUE, link="logitlink"), data=df)
-summary(fit.best)
-c(AIC = AIC(fit.best), AICc = AICc(fit.best))
-anova(fit.interaction.type_karjakin, fit.simple, type = 1, test = 'LRT')
+c(AIC = AIC(fit.last), AICc = AICc(fit.last))
 ```
+The model `fit.last` has a lower AIC, which suggests that the last model is better.
+
+
+# Conclusion
+We have seen that it is possible to apply ordinal multinomial regression to the data from Norway Chess 2021. Even though there are few covariates and observations, we still had to limit our search towards finding a good model for predicting the outcomes of the games. Using AIC and the liklihood-ratio tests when applicable, we could compare the resulting candidate models and arrive at a reasonable model.
+
+Our extensive search hinted at certain players having different strengths, but gave mostly no definitive conclusions. For instance, our findings suggest that some players are better at playing with white than black, better at playing armageddon or that their performance changed during the event. This resulted in finding a model where the relative strength of the players was most significant.
+
+We also found the interaction between Karjakin and armageddon to be significant. This find might be false, as there are very few observations to infer from. To avoid the possibility of overfitting, we could then choose the simpler model consisting of just the relative strengths among the players. Another option could be to include the chess ratings of the players in the model, as the rating is based on prior performance, and could indicate future performance.
+
+
