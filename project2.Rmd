@@ -387,7 +387,7 @@ Using the cumulative model, the residuals are standard logistic distributed. The
 $$
   F(x) = \Phi(x), \qquad \epsilon_i \sim N(0,\ 1),
 $$
-where the residuals are normally distributed.
+where the residuals are normally distributed. We will base our analysis on the cumulative logit model.
 
 Some sources indicate playing white gives a slight advantage over playing black, see for instance here. In addition, the fact that the armageddon games gives the black player no incentive to win the game (since a draw yields the same score), one could argue that the residuals should therefore be slightly negatively skewed. We will ignore this, as the resulting probabilities do not only depended on the shape of $F$ and the value of $\hat u_i = -x_i^T \boldsymbol{\hat\beta}$, but also on the estimated thresholds $\hat \theta_1$ and $\hat \theta_2$.
 
@@ -405,15 +405,7 @@ $$
 $$
 where it is assumed that the residuals are normally distributed. Although the residuals in the logit model is not normal, we will still calculate the AICc value here too.
 
-The liklihood-ratio test are based on change in deviance. For two nested models $M_1$ and $M_2$, where $M_2$ contains the parameters in $M_1$ and an additional $k$ parameters, then under the null hypothesis that $M_1$ is the true model, it follows from Wilk's theorem that the change in deviance between the two models is approximately chi-squared distributed with $k$ degrees of freedom. This can be written as
-$$
-  \Delta D = D_2 - D_1 \overset{\text{a}}{\sim} \chi^2_{k}.
-$$
-For the hypothesis test
-$$
-  H_0: \text{keep } M_1 \qquad \text{vs.} \qquad H_1: \text{replace } M_1 \text{ in favor of } M_2,
-$$
-then if the null hypothesis is correct, we reject $H_0$ with $1-\alpha$ certainty if $\Delta D < \chi^2_{k,\ \alpha}$.
+The liklihood-ratio test are based on change in deviance. For two nested models $M_1$ and $M_2$, where $M_2$ contains the parameters in $M_1$ and an additional $k$ parameters, then under the null hypothesis that $M_1$ is the true model, it follows from Wilk's theorem that the change in deviance between the two models is approximately chi-squared distributed with $k$ degrees of freedom. We will use anova() to infer the corresponding p-value for this test.
 
 \newpage
 # Simple models without interactions
@@ -475,7 +467,7 @@ c(AIC = AIC(fit.no_rt), AICc = AICc(fit.no_rt))
 ```
 
 \newpage
-# Testing different relative strengths
+# Testing different relative strengths of players
 
 Since it could be argued that the given skill level of a player could be the same for playing both white and black, we next consider a model where the effect of playing white is equal to the effect of playing black, meaning $\alpha_p = - \beta_p, \quad \forall p \in \text{players}$. This would be a simpler model since there are fewer parameters to estimate. The model becomes
 $$
@@ -490,9 +482,8 @@ df <- dummy_cols(df, select_columns = "white")
 for(i in 1:nrow(df)){
     df[i, paste("white", df$black[i], sep="_")] = -1
 }
-df <- subset(df, select = -c(white_carlsen)) # remove carlsen
 # change columns ('white_name' -> 'name')
-colnames(df)[6:10] <- c("firouzja","karjakin", "nepo", "rapport", "tari")
+colnames(df)[6:11] <- c("carlsen", "firouzja","karjakin", "nepo", "rapport", "tari")
 ```
 
 ```{r}
@@ -542,110 +533,65 @@ The LR-test becomes:
 ```{r}
 anova(fit.simple4, fit.simple, type = 1, test = 'LRT')
 ```
-This, in turn, gives no clear indication of keeping the more complicated model. However, this might not be accurate, as the model gives higher AIC than `fit.simple2`. A problem with these tests is that we have a small number of observations, and the deviance-based LR-test is not necessarily accurate for so few observations. The best model so far is the model where the relative strengths are divided into four levels of strengths.
+This, in turn, gives no clear indication of keeping the more complicated model. However, this might not be accurate, as the model gives higher AIC than `fit.simple2`. A problem with these tests is that we have a small number of observations, and the deviance-based LR-test is not necessarily accurate. The best model so far is the `fit.simple4`, where we in effect have four levels of strengths.
 
-\newpage
-## Models with rating included
+# Testing player interactions with color, round and type
 
+Next we want to test some models where there are interactions among players and certain aspects. Since the players potentially have different playing styles, we want to test whether some players do particularly well when playing with white compared to playing with black. To do so, we add a column for each player indicating if they play with white or black using dummy-encoding. From the summary of `fit.all`, we see that three players had p-values $<0.2$ for playing with white. These players are `nepomniachtchi`, `karjakin` and `tari`. Using the model `fit.simple` as the base model, we try adding the interaction between playing white for these players:
 ```{r}
-rating = data.frame("carlsen"=2855, "firouzja"=2754, "rapport"=2760,
-            "nepomniachtchi"=2792, "karjakin"=2758, "tari"=2642)
+df <- dummy_cols(df, select_columns = c("white", "black"))
 
-for(i in 1:nrow(df)){
-  df[i,"rating_white"] = rating[df[i,"white"]]
-  df[i,"rating_black"] = rating[df[i,"black"]]
-}
+fit.interaction.color <- vglm(y ~ firouzja + rapport + nepo + karjakin + tari +
+                          white_nepomniachtchi + white_karjakin + white_tari,
+                          family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+c(AIC = AIC(fit.interaction.color), AICc = AICc(fit.interaction.color))
+anova(fit.interaction.color, fit.simple, type = 1, test = 'LRT')
 ```
+The higher AIC and LR test suggests that this model does not perform any better.
 
+Next we test the interaction between player and round. The intuition behind this is that the players may become tired during the event, or might loose or gain motivation. To test this effect, we include an interaction between the players and the round in the event. Since we only care if the player is present or not, we have to take the absolute value. (if not the effect is reversed for playing black). Define this model:
 ```{r}
-fit.7 <- vglm(y ~ I(rating_white - rating_black) + I((rating_white - rating_black)**3),
-              family=cumulative(parallel = TRUE, link="logitlink"), data=df)
-summary(fit.7)
-
-c(AIC = AIC(fit.7), AICc = AICc(fit.7))
-
+fit.interaction.round <- vglm(y ~ firouzja + rapport + nepo + karjakin + tari +
+                         abs(carlsen):round + abs(firouzja):round + abs(rapport):round
+                         + abs(nepo):round + abs(karjakin):round + abs(tari):round,
+                        family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+summary(fit.interaction.round)
 ```
-
-
-
-
-
-
-### Performance rating (not include this, and the subsequent parts)
-
+The summary gives a p-value $<0.2$ for the players `carlsen`, `nepomniachtchi` and `tari`, with the p-value for `nepomniachtchi` being below $0.1$. Judging by the sign of the fitted parameters, this model suggests that `carlsen` played better towards the end of the event, while `nepomniachtchi` and `tari` worsened their play.
+Let's try fitting a model with the interaction present for only `nepomniachtchi` first:
 ```{r}
-info = data.frame("carlsen"=c(0,0,0), "firouzja"=c(0,0,0), "rapport"=c(0,0,0),
-                                 "nepomniachtchi"=c(0,0,0), "karjakin"=c(0,0,0), "tari"=c(0,0,0))
-# 1: total_opponents_rating
-# 2: wins - losses
-# 3: n_games
-
-info
-
-for(i in 1:nrow(df)){
-  # white win
-  if(df[i,'y']==1){
-    winner <- as.character(df$white[i])
-    looser <- as.character(df$black[i])
-    
-    info[1:3,winner] = info[,winner] + c(as.numeric(rating[looser]), 1, 1)
-    info[1:3,looser] = info[,looser] + c(as.numeric(rating[winner]),-1, 1)
-  }
-  # black win
-  else if(df[i,'y']==3){
-    winner <- as.character(df$black[i])
-    looser <- as.character(df$white[i])
-    
-    info[1:3,winner] = info[,winner] + c(as.numeric(rating[looser]), 1, 1)
-    info[1:3,looser] = info[,looser] + c(as.numeric(rating[winner]),-1, 1)
-  }
-  # draw
-  else {
-    winner <- as.character(df$black[i])
-    looser <- as.character(df$white[i])
-    
-    info[1:3,winner] = info[,winner] + c(as.numeric(rating[looser]), 0, 1)
-    info[1:3,looser] = info[,looser] + c(as.numeric(rating[winner]), 0, 1)
-  }
-}
-
-performance = data.frame("carlsen"=0, "firouzja"=0, "rapport"=0,
-            "nepomniachtchi"=0, "karjakin"=0, "tari"=0)
-
-for(name in colnames(info)){
-  performance[name] = (info[1,name] + 400*info[2,name])/(info[3,name])
-}
-
-# add performance
-for(i in 1:nrow(df)){
-  df[i,"performance_white"] = performance[df[i,"white"]]
-  df[i,"performance_black"] = performance[df[i,"black"]]
-}
+fit.interaction.round_nepo <- vglm(y ~ firouzja + rapport + nepo + karjakin + tari + abs(nepo):round,
+                        family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+c(AIC = AIC(fit.interaction.round_nepo), AICc = AICc(fit.interaction.round_nepo))
+anova(fit.interaction.round_nepo, fit.simple, type = 1, test = 'LRT')
 ```
+The p-value of $0.182$ almost suggests that this interaction is significant. However, the AIC did not improve. 
 
-
+The last interaction we want to test is between player and type of match played. As some players might adapt their playing style for armageddon, we fit a model with an interaction between the player and type:
 ```{r}
-fit.8 <- vglm(y ~ I(performance_white - performance_black),
-              family=cumulative(parallel = TRUE, link="logitlink"), data=df)
-summary(fit.8)
-
-c(AIC = AIC(fit.8), AICc = AICc(fit.8))
-
+fit.interaction.type <- vglm(y ~ firouzja + rapport + nepo + karjakin + tari + firouzja:type
+                         + rapport:type + nepo:type + karjakin:type + tari:type,
+                        family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+summary(fit.interaction.type)
+c(AIC = AIC(fit.interaction.type), AICc = AICc(fit.interaction.type))
+anova(fit.interaction.type, fit.simple, type = 1, test = 'LRT')
 ```
+From the summary, only the player `karjakin` has a p-value less than $0.1$. Now we fit a model with this interaction:
+```{r}
+fit.interaction.type_karjakin <- vglm(y ~ firouzja + rapport + nepo + karjakin + tari
+                    + karjakin:type,
+                    family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+summary(fit.interaction.type_karjakin)
+c(AIC = AIC(fit.interaction.type_karjakin), AICc = AICc(fit.interaction.type_karjakin))
+anova(fit.interaction.type_karjakin, fit.simple, type = 1, test = 'LRT')
+```
+From the LR-tets, we see that there are evidence for rejecting `fit.simple` in favor of the new model including this interaction.
 
-
-```{r, echo = FALSE, eval = F}
-G2 = deviance(fit11) - deviance(fit10)
-df.diff = df.residual(fit11) - df.residual(fit10) 
-G2
-1 - pchisq(G2, df.diff)
-
-# P(u <= theta_1), P(u <= theta_2)
-p.less_or_equal <- plogis(predict(fit.0, df))
-stats <- cbind('white'=df$white, 'black'=df$black,
-               'P(white)'=round(p.less_or_equal[,1],2),
-               'P(draw)'=round(p.less_or_equal[,2]-p.less_or_equal[,1],2),
-               'P(black)'=round(1-p.less_or_equal[,2],2),
-               'outcome'=c('white','draw','black')[df$y])
-#stats
+# better one ?
+```{r}
+fit.best <- vglm(y ~ I(firouzja + rapport) + nepo + karjakin + tari + karjakin:type,
+                    family=cumulative(parallel = TRUE, link="logitlink"), data=df)
+summary(fit.best)
+c(AIC = AIC(fit.best), AICc = AICc(fit.best))
+anova(fit.interaction.type_karjakin, fit.simple, type = 1, test = 'LRT')
 ```
