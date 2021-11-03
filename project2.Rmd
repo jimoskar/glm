@@ -586,7 +586,7 @@ summary(fit.interaction.type_karjakin)
 c(AIC = AIC(fit.interaction.type_karjakin), AICc = AICc(fit.interaction.type_karjakin))
 anova(fit.interaction.type_karjakin, fit.simple, type = 1, test = 'LRT')
 ```
-From the LR-tets, we see that there are evidence for rejecting `fit.simple` in favor of the new model including the interaction between player `karjakin` and `type` of game played. As seen in the summary of this model, we note that the playing strength of `firouzja` and `rapport` are again comparable. As a last test, let's the current best model where we assume that the playing strength of these two players are equal. Define this model as `fit.last` and compare it with the current model:
+From the LR-tets, we see that there are evidence for rejecting `fit.simple` in favor of the new model including the interaction between player `karjakin` and `type` of game played. As seen in the summary of this model, we note that the playing strength of `firouzja` and `rapport` are again comparable. As a last test, we fit a new model where we assume that the playing strength of these two players are equal. Define this model as `fit.last` and compare it with the current model:
 ```{r}
 fit.last <- vglm(y ~ I(firouzja + rapport) + nepo + karjakin + tari + karjakin:type,
                     family=cumulative(parallel = TRUE, link="logitlink"), data=df)
