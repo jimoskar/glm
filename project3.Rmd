@@ -1,0 +1,26 @@
+---
+title: 'TMA4315: Project 3'
+author: "jototlan@stud.ntnu.no (10018), martigtu@stud.ntnu.no (10037)"
+output:
+  pdf_document: default
+  html_document:
+    df_print: paged
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## Marginal variance and intraclass covariance probit model via pmvnorm
+
+```{r}
+#install.packages("mvtnorm")
+library(mvtnorm) # to use pmvnorm()
+```
+
+## Power of correct mixed vs misspecified fixed effect model vs pseudoreplication
+
+## Numerical computation of the critical value for LRT test of random slope
+
+
+
