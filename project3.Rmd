@@ -11,6 +11,34 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
+Load data:
+```{r}
+long <- read.csv("https://www.math.ntnu.no/emner/TMA4315/2020h/eliteserie.csv", colClasses = c("factor","factor","factor","numeric"))
+head(long)
+```
+# a)
+We consider the model
+```{r}
+library(glmmTMB)
+mod <- glmmTMB(goals ~ home + (1|attack) + (1|defence), poisson, data=long, REML=TRUE)
+```
+
+If we consider the number of goals scored by team $i$ in their $j$'th match, we can euivalently state the model as
+
+$$
+y_{ij} = \beta_h x_{ij} + \gamma_{k(i,j)}^\text{attack} + \gamma_{l(i,j)}^{\text{defence}} + \varepsilon_{ij}.
+$$
+
+Here, $y_{ij}$ is the number of goals scored, $\beta_h$ is the effect of playing home,  $\gamma_{k(i,j)}^\text{attack}$ is the effect of team $k(i,j)$ attacking, $\gamma_{l(i,j)}^{\text{defence}}$ is the effect of team $l(i,j)$ defending, and $\varepsilon_{ij} \sim \mathrm{Poisson}$ is the error term. The distributional assumptions on the errors is reasonable, since the number of goals are discrete, and one could imagine that 'unexpected' goals occur as a result of e.g. a 'keeper-blunder' or similar. \textcolor{red}{hvilke paramerte er feilen poissonfordelt med? Er fordelingen til gammaene normal eller poisson?}
+
+# b)
+
+```{r}
+summary(mod)
+ranef(mod)
+```
+
+
 ## Marginal variance and intraclass covariance probit model via pmvnorm
 
 ```{r}
