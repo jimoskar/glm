@@ -29,11 +29,8 @@ $$
 \lambda_i = \exp\left(\beta_h x_{i} + \gamma_{j(i)}^\text{attack} + \gamma_{k(i)}^{\text{defence}} + \varepsilon_{i}\right).
 $$
 
-Here, $\beta_h$ is the effect of playing home,  $\gamma_{j(i)}^\text{attack}$ is the effect of team $j(i)$ attacking, $\gamma_{k(i)}^{\text{defence}}$ is the effect of team $k(i)$ defending, and $\varepsilon_{i}$ is the error term. The distributional assumption is reasonable, since the number of goals is discrete, and one could argue that the time between goals is independent (exponentially distributed). One could, however, argue that this is not the case, for example because a team is more likely to score right after having conceded a goal.
+Here, $\beta_h$ is the effect of playing home,  $\gamma_{j(i)}^\text{attack}$ is the effect of team $j(i)$ attacking, $\gamma_{k(i)}^{\text{defence}}$ is the effect of team $k(i)$ defending, and $\varepsilon_{i}$ is the error term. The distributional assumption is reasonable, since the number of goals is discrete, and one could argue that the time between goals is independent (exponentially distributed). One could, however, argue that this is not the case, for example because a team is more likely to score right after having conceded a goal. \textcolor{red}{Trenger flere antagelser? Diskutere REML?}
 
-```{r}
-
-```
 
 # b)
 
@@ -41,6 +38,29 @@ Here, $\beta_h$ is the effect of playing home,  $\gamma_{j(i)}^\text{attack}$ is
 summary(mod)
 ranef(mod)
 ```
+
+The effect of playing home is positive and statistically significant. According to the output, it almost worth half a goal (0.40716). This seems reasonable from an intuitive perspective. Looking at the estimated random effects, we can e.g. consider $\gamma_\text{Rosenborg}^{\text{defence}} \approx -0.153$. This is the lowest value among all teams, which indicates that Rosenborg is the best defending team. To check this, we calculate the average number of goals conceded by every team:
+```{r}
+no.NA = long[is.na(long$goals) == 0, c("defence", "goals")]
+agg = aggregate(no.NA$goals, by = list(no.NA$defence), FUN = mean)
+colnames(agg) <- c("Team", "Avg. # of conceded goals")
+knitr::kable(agg)
+```
+As expected, Rosenborg has the lowest average number of conceded goals.
+
+we denote the team of average attack strength by $A$, and the team of average defense strength by $D$. Let $y_A$ be the number of goals scored by team $A$, and similarly $y_D$ be the number of goals scored by team $D$ Then, we want to estimate \textcolor{red}{skal epsilon være med egt?}
+
+$$
+\mathrm{E}\left[ y_A \right] = \exp\left(\beta_h + \gamma_{A}^\text{attack} + \gamma_{D}^{\text{defence}} + \varepsilon_{i}\right),
+$$
+
+as well as
+
+$$
+\mathrm{Var}(y_A)
+$$
+\textcolor{red}{mangler informasjon for yB?}
+
 
 
 ## Marginal variance and intraclass covariance probit model via pmvnorm
