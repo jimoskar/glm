@@ -20,16 +20,20 @@ head(long)
 We consider the model
 ```{r}
 library(glmmTMB)
-mod <- glmmTMB(goals ~ home + (1|attack) + (1|defence), poisson, data=long, REML=TRUE)
+mod <- glmmTMB(goals ~ home + (1|attack) + (1|defence),  poisson, data=long, REML=TRUE)
 ```
 
-If we consider the number of goals scored by team $i$ in their $j$'th match, we can euivalently state the model as
+The distributional assumption on the $i$'th response (number of goals) is $y_{i} \sim \mathrm{Poisson}(\lambda_{i})$. The mean is connected to the covariates:
 
 $$
-y_{ij} = \beta_h x_{ij} + \gamma_{k(i,j)}^\text{attack} + \gamma_{l(i,j)}^{\text{defence}} + \varepsilon_{ij}.
+\lambda_i = \exp\left(\beta_h x_{i} + \gamma_{j(i)}^\text{attack} + \gamma_{k(i)}^{\text{defence}} + \varepsilon_{i}\right).
 $$
 
-Here, $y_{ij}$ is the number of goals scored, $\beta_h$ is the effect of playing home,  $\gamma_{k(i,j)}^\text{attack}$ is the effect of team $k(i,j)$ attacking, $\gamma_{l(i,j)}^{\text{defence}}$ is the effect of team $l(i,j)$ defending, and $\varepsilon_{ij} \sim \mathrm{Poisson}$ is the error term. The distributional assumptions on the errors is reasonable, since the number of goals are discrete, and one could imagine that 'unexpected' goals occur as a result of e.g. a 'keeper-blunder' or similar. \textcolor{red}{hvilke paramerte er feilen poissonfordelt med? Er fordelingen til gammaene normal eller poisson?}
+Here, $\beta_h$ is the effect of playing home,  $\gamma_{j(i)}^\text{attack}$ is the effect of team $j(i)$ attacking, $\gamma_{k(i)}^{\text{defence}}$ is the effect of team $k(i)$ defending, and $\varepsilon_{i}$ is the error term. The distributional assumption is reasonable, since the number of goals is discrete, and one could argue that the time between goals is independent (exponentially distributed). One could, however, argue that this is not the case, for example because a team is more likely to score right after having conceded a goal.
+
+```{r}
+
+```
 
 # b)
 
