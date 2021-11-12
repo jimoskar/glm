@@ -23,13 +23,29 @@ library(glmmTMB)
 mod <- glmmTMB(goals ~ home + (1|attack) + (1|defence),  poisson, data=long, REML=TRUE)
 ```
 
-The distributional assumption on the $i$'th response (number of goals) is $y_{i} \sim \mathrm{Poisson}(\lambda_{i})$. The mean is connected to the covariates:
+The distributional assumption on the $i$'th response (number of goals) is $y_{i}|\gamma_{j(i)},\gamma_{k(i)} \sim \mathrm{Poisson}(\lambda_{i})$, $i = 1, 2, \ldots, n = 480$. The conditional mean is connected to the covariates by the canonical link function:
 
 $$
-\lambda_i = \exp\left(\beta_h x_{i} + \gamma_{j(i)}^\text{attack} + \gamma_{k(i)}^{\text{defence}} + \varepsilon_{i}\right).
+\lambda_i = \exp\left(\beta_0 + \beta_h x_{i} + \gamma_{j(i)}^a + \gamma_{k(i)}^{d} \right).
 $$
 
-Here, $\beta_h$ is the effect of playing home,  $\gamma_{j(i)}^\text{attack}$ is the effect of team $j(i)$ attacking, $\gamma_{k(i)}^{\text{defence}}$ is the effect of team $k(i)$ defending, and $\varepsilon_{i}$ is the error term. The distributional assumption is reasonable, since the number of goals is discrete, and one could argue that the time between goals is independent (exponentially distributed). One could, however, argue that this is not the case, for example because a team is more likely to score right after having conceded a goal. \textcolor{red}{Trenger flere antagelser? Diskutere REML?}
+Here, $\beta_h$ is the effect of playing home,  $\gamma_{j(i)}^a$ is the effect of team $j(i)$ attacking, $\gamma_{k(i)}^d$ is the effect of team $k(i)$ defending, and $\varepsilon_{i}$ is the error term. The random effects are independent and identically distributed, such that
+
+$$
+\gamma_{j(i)}^a \sim \mathcal{N}(0, \tau_{\text{a}}) \quad \text{and} \quad \gamma_{k(i)}^d \sim \mathcal{N}(0, \tau_{d}),
+$$
+where $j(i) = 1, 2, \ldots, m,\, k(i) = 1, 2, \ldots, m = 16$ 
+
+## Distributional Assumption on Response
+
+Assuming that the response follows a Poisson distribution amounts to making the following assumptions: 
+\begin{enumerate}
+\item Goals are scored independently, i.e. the number of goals scored within disjoint time intervals is independent.
+\item The number of goals scored in a time interval is proportional to the length of the interval.
+\item Two (or more) goals cannot be scored at exactly the same instance.
+\end{enumerate}
+
+The last two assumptions seem very reasonable; two goals can obviously not occur at the same time, and more time gives more oppurtunities for goal scoring. The first one, however, is more questionable. For example, a team might which has just conceded a goal close to the end of the game might play more aggressively to salvage a draw, hence increasing the likelihood of more goals being scored. Despite this, the Poisson distribution seems like a reasonable choice to model this process. \textcolor{red}{Trenger flere antagelser? Diskutere REML?}
 
 
 # b)
