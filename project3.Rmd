@@ -11,7 +11,6 @@ output:
 knitr::opts_chunk$set(echo = TRUE)
 ```
 
-Load data:
 ```{r}
 long <- read.csv("https://www.math.ntnu.no/emner/TMA4315/2020h/eliteserie.csv", colClasses = c("factor","factor","factor","numeric"))
 head(long)
@@ -63,16 +62,213 @@ $$
 
 
 
-## Marginal variance and intraclass covariance probit model via pmvnorm
+\newpage
 
+# Notation
+
+The linear predictor is given as
+$$
+  \eta_{ijk} = \beta_0 + \beta_{hk} + \gamma_{ai} + \gamma_{dj}.
+$$
+The random effects $\gamma_{ai}$ and $\gamma_{dj}$ are IID normal with
+$$
+  \gamma_{ai} \sim \text{N}(0,\ \tau_a^2), \qquad \gamma_{dj} \sim \text{N}(0,\ \tau_d^2)
+$$
+whenever $i,j \in \{1, \cdots, 16\}$ and $i\ne j$.
+
+Using the log-link, the conditional mean of the response is
+$$
+  \mu_{ijk} = \text{E}[y_{ijk}\mid \gamma_{ai}, \gamma_{dj}] = \exp(\eta_{ijk}).
+$$
+
+# c)
+
+The expected value and variance of goals scored by two randomly selected teams can be found by the laws of total expectation and total variance conditioned on the random effect given by the two teams. For this, we use that the distribution $\text{Lognormal}(0,\tau^2)$ has mean $\exp(\tau^2/2)$ and variance $(\exp(\tau^2)-1)\exp(\tau^2)$.
+
+The law of total expectation gives
+$$
+\begin{split}
+  \text{E}[y_{ijk}] &= \text{E}\left[\text{E}\left[y_{ijk} \mid \gamma_{ai}, \gamma_{dj}\right]\right]\\
+  &= \text{E}\left[ \text{exp}\left(\beta_0 + \beta_h x_{ijk} + \gamma_{ai} + \gamma_{dj}\right) \right]\\
+  &= \text{exp}\left( \beta_0 + \beta_h x_{ijk}\right) \text{E}\left[\exp\left(\gamma_{ai} + \gamma_{dj}\right)\right] \\
+  &= \text{exp}\left( \beta_0 + \beta_h x_{ijk}\right) \text{exp}\left( \frac{\tau_a^2+\tau_d^2}{2}\right). \\
+\end{split}
+$$
+
+The law of total variance gives
+$$
+\begin{split}
+  \text{Var}[y_{ijk}] &= \text{E}\left[\text{Var}\left[y_{ijk} \mid \gamma_{ai}, \gamma_{dj}\right]\right] + \text{Var}\left[\text{E}\left[y_{ijk} \mid \gamma_{ai}, \gamma_{dj}\right]\right]\\
+  &= \text{E}\left[ \text{exp}\left(\beta_0 + \beta_h x_{ijk} + \gamma_{ai} + \gamma_{dj}\right) \right] + \text{Var}\left[ \text{exp}\left(\beta_0 + \beta_h x_{ijk} + \gamma_{ai} + \gamma_{dj}\right) \right]\\
+  &= \text{E}[y_{ijk}]  + \text{exp}\left( 2(\beta_0 + \beta_h x_{ijk}\right)) \text{Var}\left[ \text{exp}\left(\gamma_{ai} + \gamma_{dj}\right) \right]\\
+  &= \text{exp}\left( \beta_0 + \beta_h x_{ijk}\right) \text{exp}\left( \frac{\tau_a^2+\tau_d^2}{2}\right) + \text{exp}\left( 2\left(\beta_0 + \beta_h x_{ijk}\right)\right) \left( \text{exp}\left( \tau_a^2+\tau_d^2\right) - 1 \right) \text{exp}\left( \tau_a^2+\tau_d^2\right).\\
+\end{split}
+$$
+Note that the total marginal variance consists of two terms, given as 
+$$
+  \text{Var}[y_{ijk}] = \underbrace{\text{E}\left[\text{Var}\left[y_{ijk} \mid \gamma_{ai}, \gamma_{dj}\right]\right]}_{\text{Variance of the game}} + \underbrace{\text{Var}\left[\text{E}\left[y_{ijk} \mid \gamma_{ai}, \gamma_{dj}\right]\right]}_{\text{Varaince of team strengths}}.
+$$
+The first term is the expected variance of goals, which is a measure of the inherent randomness of the football game given the two teams. The second term is the variance of the expected goals, which is attributed to the variance in the strength of the two teams, since the expected goals are constant given two teams, so the randomness comes from the difference in strengths among the teams. We now calculate the proportion of variance explained by the two terms without and with home filed advantage.
+
+
+## Estimating the proportions with no home field advantage:
 ```{r}
-#install.packages("mvtnorm")
-library(mvtnorm) # to use pmvnorm()
+# Parameters from model
+beta <- summary(mod)$coefficients$cond[,1]
+beta0 = beta[1]
+beta.h = beta[2]
+
+# Variance of random effects
+tau2.attack <- summary(mod)$var$cond$attack[1]
+tau2.defence <- summary(mod)$var$cond$defence[1]
+tau2 <- tau2.attack + tau2.defence
+
+# Marginal variance
+var0.game <- exp(beta0 + tau2/2)
+var0.strength <- exp(2*beta0)*(exp(tau2)-1)*exp(tau2)
+var0 <- var0.game + var0.strength
+
+# Proportion of variance
+prop0.game = var0.game/var0
+prop0.strength = var0.strength/var0
+```
+With no home field advantage for the attacking team, the total marginal variance of the number of goals is `r var0`, where the inherent randomness of the game accounts for `r round(prop0.game, 4)` and the variation in team strengths account for `r round(prop0.strength, 4)`.
+
+## Estimating the proportions with home field advantage:
+```{r}
+# Marginal variance
+var1.game <- exp(beta0 + beta.h + tau2/2)
+var1.strength <- exp(2*(beta0 + beta.h))*(exp(tau2)-1)*exp(tau2)
+var1 <- var1.game + var1.strength
+
+# Proportions of variance
+prop1.game = var1.game / var1
+prop1.strength = var1.strength / var1
+```
+If the attacking team has a home field advantage, the total marginal variance of the number of goals is `r var1`, where the inherent randomness of the game accounts for `r round(prop1.game, 4)` and the variation in team strengths account for `r round(prop1.strength, 4)`. We note that also here the majority of variance can be explained by the game itself.
+
+An interesting observation is that when the home field advantage is present, the proportion of variance explained by the strengths of the teams is higher. This follows directly from the equation of the total marginal variance when $\beta_h > 0$, as the second term is multiplied by an extra factor of $\exp(\beta_h) > 1$.
+
+
+# d)
+
+We want to test if the two random effects in the model are significant. Since $\gamma_a \sim N(0, \tau^2_a)$ and $\gamma_d \sim N(0, \tau^2_d)$, this is equivalent to testing whether the variance of each random effect is positive. The hypothesis test for determining if the effect of attacking is significant can be formulated as
+$$
+  \text{H}_0 : \tau^2_a = 0 \quad \text{vs} \quad \text{H}_1 : \tau^2_a > 0,
+$$
+and a similar test can be constructed for the effect of defending.
+
+This can be carried out using a likelihood-ratio test. The test statistic is $\lambda_{LR} := -2(l_0-l_1)$, where $l_0$ and $l_1$ are the log-likelihoods of the two models. We cannot apply Wilks' theorem directly here, as standard asymptotic theory is violated. The reason for this is that there is a 50% chance that under H$_1$, the maximum likelihood estimator $\hat \tau^2_a$ falls on the boundary of the parameter space. This is due to the expected value of the score function $s(\tau^2_a) := \frac{\partial l_1}{\partial \tau_a^2}$ evaluated at zero is zero, $E\left[ s(0) \right] = 0$, so whenever the slope of $s(0)$ is negative, the maximum likelihood estimator returns zero. This results in a mixture of two distributions
+$$
+  \lambda_{RT} \sim \frac12\chi^2_0 : \frac12 \chi^2_1
+$$
+where $\chi^2_0$ is simply the point mass distribution located at zero. The critical value $C$ of the likelihood-ratio test is given as
+$$
+  P(\lambda_{RT} \ge C) = \frac12 P(\chi^2_0 \ge C) + \frac12 P(\chi^2_1 \ge C) = \alpha.
+$$
+Since $C > 0$ for $\alpha < \frac12$ the first term vanishes, so $C$ is the upper $2\alpha$ quantile of a chi-squared distribution with one degree of freedom. Using $\alpha = 0.05$ we get the critical value
+```{r}
+alpha <- 0.05
+qchisq(1-2*alpha, df=1)
 ```
 
-## Power of correct mixed vs misspecified fixed effect model vs pseudoreplication
+## Testing significance of effect of attack
 
-## Numerical computation of the critical value for LRT test of random slope
+```{r}
+mod.no_attack <- glmmTMB(goals ~ home + (1|defence), poisson, data=long, REML=TRUE)
+LRT.no_attack <- -2*as.numeric(logLik(mod.no_attack) - logLik(mod))
+
+p.value <- 0.5 * pchisq(LRT.no_attack, df=0, lower.tail = FALSE) +
+           0.5 * pchisq(LRT.no_attack, df=1, lower.tail = FALSE)
+p.value
+```
+The p-value suggest that we can not reject H$_0$, meaning that the effect of attack is not significant. The test statistic has value `r LRT.no_attack`, which is lower than the critical value.
+
+## Testing significance of effect of defence
+
+```{r}
+mod.no_defence <- glmmTMB(goals ~ home + (1|attack), poisson, data=long, REML=TRUE)
+LRT.no_defence <- -2*as.numeric(logLik(mod.no_defence) - logLik(mod))
+
+p.value <- 0.5 * pchisq(LRT.no_defence, df=0, lower.tail = FALSE) +
+           0.5 * pchisq(LRT.no_defence, df=1, lower.tail = FALSE)
+p.value
+```
+The p-value suggest that the effect of defence is not significant. The test statistic has value has value `r LRT.no_defence`, which is again lower than the critical value.
+
+## Testing the effect of home field advantage
+
+Our hypothesis can be formulated as
+$$
+  \text{H}_0 : \beta_h = 0 \quad \text{vs} \quad \text{H}_1 : \beta_h \ne 0,
+$$
+where under H$_1$, the home field advantage could be either negative or positive.
+
+The restricted maximum likelihood (REML) is often preferred when fitting generalized mixed models as the calculations are cheaper than using normal maximum likelihood estimation. However, this is not possible here, as REML uses a likelihood function on a transformed set of data, so that nuisance parameters have no effect. Under H$_0$, this is simply the intercept $\beta_0$. But under H$_1$, we also have the parameter $\beta_h$ for the home field advantage. This means that the two models lead to different means using REML, making the likelihood non-comparable. Setting REML = FALSE avoids this issue and fits the models using normal maximum likelihoods.
+
+
+```{r}
+mod.ML <- glmmTMB(goals ~ home + (1|attack) + (1|defence), poisson, data=long, REML=FALSE)
+mod.no_home <- glmmTMB(goals ~ (1|attack) + (1|defence), poisson, data=long, REML=FALSE)
+
+LRT.no_home <- -2*as.numeric(logLik(mod.no_home) - logLik(mod.ML))
+
+p.value <- pchisq(LRT.no_home, df=1, lower.tail = FALSE)
+p.value
+```
+The low p-value is smaller than the significance level, indicating that the effect of home field is significant.
+
+
+# e)
+
+```{r}
+frankv <- data.table::frankv
+
+ranking <- function(df){
+  n.teams <- length(unique(df$attack))
+  info <- data.frame(row.names = unique(df$attack), points = rep(0, n.teams),
+                     goal.diff = rep(0, n.teams), goals.scored = rep(0, n.teams))
+  
+  for(n in seq(1, dim(df)[1], 2)){
+    team1 <- as.character(df$attack[n])
+    team2 <- as.character(df$defence[n])
+    goals1 = df$goals[n]
+    goals2 = df$goals[n+1]
+    
+    # skip missing values
+    if (is.na(goals1) | is.na(goals2)){
+      next
+    }
+    else if(goals1 > goals2){
+      info[team1,"points"] = info[team1,"points"] + 3
+    }
+    else if(goals1 > goals2){
+      info[team2,"points"] = info[team1,"points"] + 3
+    }
+    else {
+      info[team1,"points"] = info[team1,"points"] + 1
+      info[team2,"points"] = info[team1,"points"] + 1
+    }
+    info[team1,"goal.diff"] = info[team1,"goal.diff"] + goals1 - goals2
+    info[team2,"goal.diff"] = info[team2,"goal.diff"] + goals2 - goals1
+    info[team1,"goals.scored"] = info[team1,"goals.scored"] + goals1
+    info[team2,"goals.scored"] = info[team2,"goals.scored"] + goals2
+  }
+  info$rank <- frankv(info, cols=c("points","goal.diff","goals.scored"),
+                      order=-1, ties.method="random")
+  info[order(info$rank),]
+}
+knitr::kable(ranking(long))
+```
+
+
+
+
+
+
+
+
+
 
 
 
