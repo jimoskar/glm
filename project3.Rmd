@@ -242,8 +242,8 @@ frankv <- data.table::frankv
 
 ranking <- function(df){
   n.teams <- length(unique(df$attack))
-  info <- data.frame(row.names = unique(df$attack), points = rep(0, n.teams),
-                     goal.diff = rep(0, n.teams), goals.scored = rep(0, n.teams))
+  stats <- data.frame(row.names = unique(df$attack), points = rep(0, n.teams),
+                      goal.diff = rep(0, n.teams), goals.scored = rep(0, n.teams))
   
   for(n in seq(1, dim(df)[1], 2)){
     team1 <- as.character(df$attack[n])
@@ -256,23 +256,74 @@ ranking <- function(df){
       next
     }
     else if(goals1 > goals2){
-      info[team1,"points"] = info[team1,"points"] + 3
+      stats[team1,"points"] = stats[team1,"points"] + 3
     }
     else if(goals2 > goals1){
-      info[team2,"points"] = info[team2,"points"] + 3
+      stats[team2,"points"] = stats[team2,"points"] + 3
     }
     else {
-      info[team1,"points"] = info[team1,"points"] + 1
-      info[team2,"points"] = info[team2,"points"] + 1
+      stats[team1,"points"] = stats[team1,"points"] + 1
+      stats[team2,"points"] = stats[team2,"points"] + 1
     }
-    info[team1,"goal.diff"] = info[team1,"goal.diff"] + goals1 - goals2
-    info[team2,"goal.diff"] = info[team2,"goal.diff"] + goals2 - goals1
-    info[team1,"goals.scored"] = info[team1,"goals.scored"] + goals1
-    info[team2,"goals.scored"] = info[team2,"goals.scored"] + goals2
+    stats[team1,"goal.diff"] = stats[team1,"goal.diff"] + goals1 - goals2
+    stats[team2,"goal.diff"] = stats[team2,"goal.diff"] + goals2 - goals1
+    stats[team1,"goals.scored"] = stats[team1,"goals.scored"] + goals1
+    stats[team2,"goals.scored"] = stats[team2,"goals.scored"] + goals2
   }
-  info$rank <- frankv(info, cols=c("points","goal.diff","goals.scored"),
-                      order=-1, ties.method="random")
-  info[order(info$rank),]
+  stats$rank <- frankv(stats, cols=c("points","goal.diff","goals.scored"),
+                       order=-1, ties.method="random")
+  stats
 }
-knitr::kable(ranking(long))
+
+stats <- ranking(long)
+knitr::kable(stats[order(stats$rank),])
 ```
+
+# f)
+
+Simulating 1000 complete seasons using the predicted mean $\hat \mu$ from the model created in a).
+
+```{r, cache=TRUE}
+set.seed(0)
+# number of matches
+n = dim(long)[1]
+
+# predicted mean goals scored in each match
+mu.hat <- predict(mod, newdata=long, type="response")
+
+# matrix to store all simulated rankings
+rank.matrix <- matrix(0, nrow = 1000, ncol = 16)
+colnames(rank.matrix) = unique(long$attack)
+
+# doing the simulations
+temp <- long$goals
+for(i in 1:1000){
+  long$goals <- rpois(n, mu.hat)
+  rank.matrix[i,] <- ranking(long)$rank
+}
+long$goals <- temp
+```
+
+
+
+```{r}
+# probabilities of each observation
+probabilities <- apply(rank.matrix, 2, table)/1000
+
+# summary with mean ranking and probabilities
+rank.summary <- data.frame(row.names = unique(long$attack),
+                           mean = colMeans(rank.matrix),
+                           P = t(probabilities))
+
+# print the summary
+output <- rank.summary[order(rank.summary$mean),]
+library(kableExtra)
+knitr::kable(output) %>% kableExtra::landscape() 
+```
+
+TODO: Add some comment here.
+
+
+
+
+
