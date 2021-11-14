@@ -258,12 +258,12 @@ ranking <- function(df){
     else if(goals1 > goals2){
       info[team1,"points"] = info[team1,"points"] + 3
     }
-    else if(goals1 > goals2){
-      info[team2,"points"] = info[team1,"points"] + 3
+    else if(goals2 > goals1){
+      info[team2,"points"] = info[team2,"points"] + 3
     }
     else {
       info[team1,"points"] = info[team1,"points"] + 1
-      info[team2,"points"] = info[team1,"points"] + 1
+      info[team2,"points"] = info[team2,"points"] + 1
     }
     info[team1,"goal.diff"] = info[team1,"goal.diff"] + goals1 - goals2
     info[team2,"goal.diff"] = info[team2,"goal.diff"] + goals2 - goals1
