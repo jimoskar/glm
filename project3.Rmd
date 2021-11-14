@@ -51,11 +51,16 @@ The last two assumptions seem very reasonable; two goals can obviously not occur
 # b)
 
 ```{r}
-summary(mod)
-ranef(mod)
+sum <- summary(mod)
+sum
+beta.0 <- sum$coefficients$cond[1]
+beta.h <- sum$coefficients$cond[2]
+
+rf <- ranef(mod)
+rf
 ```
 
-The effect of playing home is positive and statistically significant. According to the output, it almost worth half a goal (0.40716). This seems reasonable from an intuitive perspective. Looking at the estimated random effects, we can e.g. consider $\gamma_\text{Rosenborg}^{\text{defence}} \approx -0.153$. This is the lowest value among all teams, which indicates that Rosenborg is the best defending team. To check this, we calculate the average number of goals conceded by every team:
+The effect of playing home is positive and statistically significant. According to the output, the team playing home scores $\exp(0.40716)=$ `r exp(0.40716)` more goals on average, i.e. nearly 50% more goals on average. This seems reasonable from an intuitive perspective. Looking at the estimated random effects, we can e.g. consider $\gamma_\text{Rosenborg}^{\text{defence}} \approx -0.153$. This is the lowest value among all teams, which indicates that Rosenborg is the best defending team. To check this, we calculate the average number of goals conceded by every team:
 ```{r}
 no.NA = long[is.na(long$goals) == 0, c("defence", "goals")]
 agg = aggregate(no.NA$goals, by = list(no.NA$defence), FUN = mean)
@@ -64,39 +69,17 @@ knitr::kable(agg)
 ```
 As expected, Rosenborg has the lowest average number of conceded goals.
 
-we denote the team of average attack strength by $A$, and the team of average defense strength by $D$. Let $y_A$ be the number of goals scored by team $A$, and similarly $y_D$ be the number of goals scored by team $D$ Then, we want to estimate \textcolor{red}{skal epsilon være med egt?}
+From the model assumptions, namely $\gamma_{i}^a \sim \mathcal{N}(0, \tau_{\text{a}})$ and $\gamma_{j}^d \sim \mathcal{N}(0, \tau_{d})$, the average attack strength and the average defense strength are equal to 0. An estimate of the expected number of goals which the average attacking team scores is thus given as
 
 $$
-\mathrm{E}\left[ y_A \right] = \exp\left(\beta_h + \gamma_{A}^\text{attack} + \gamma_{D}^{\text{defence}} + \varepsilon_{i}\right),
+\exp(\beta_0 + \beta_h) \approx \text{`r exp(beta.0 + beta.h)`}.
 $$
+Since the the number of goals scored is assumed to follow a Poisson distribution, an estimate of the variance is given by the same value. We now consider the the situation when the average defense team is attacking (here we assume that they also have average attck strength and that the average attack team has average defense) \textcolor{red}{spør om dette!!}. Then, an estimate of the number of goals scored is given as
 
-as well as
-
 $$
-\mathrm{Var}(y_A)
+\exp(\beta_0) \approx \text{`r exp(beta.0)`}.
 $$
-\textcolor{red}{mangler informasjon for yB?}
-
-
-
-\newpage
-
-# Notation
-
-The linear predictor is given as
-$$
-  \eta_{ijk} = \beta_0 + \beta_{hk} + \gamma_{ai} + \gamma_{dj}.
-$$
-The random effects $\gamma_{ai}$ and $\gamma_{dj}$ are IID normal with
-$$
-  \gamma_{ai} \sim \text{N}(0,\ \tau_a^2), \qquad \gamma_{dj} \sim \text{N}(0,\ \tau_d^2)
-$$
-whenever $i,j \in \{1, \cdots, 16\}$ and $i\ne j$.
-
-Using the log-link, the conditional mean of the response is
-$$
-  \mu_{ijk} = \text{E}[y_{ijk}\mid \gamma_{ai}, \gamma_{dj}] = \exp(\eta_{ijk}).
-$$
+Again, since we consider a Poisson-distributed variable, an estimate of the variance i given by the same value.
 
 # c)
 
