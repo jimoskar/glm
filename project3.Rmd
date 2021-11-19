@@ -307,6 +307,31 @@ knitr::kable(output) %>% kableExtra::landscape()
 
 TODO: Add some comment here.
 
+# g)
+
+
+We start by creating a data frame with the rankings from f) and the corresponding random effects, as well as the difference between attack strength and defense strength.
+```{r}
+re <- ranef(mod)
+
+# Create new data frame for rankings and random effects.
+df <- data.frame("ranking" = 1:16)
+row.names(df) <- row.names(output)
+df$attack <- re$cond$attack[row.names(df), ]
+df$defence <- re$cond$defence[row.names(df), ]
+df$difference = df$attack - df$defence
+df
+```
+
+Next, we do some plotting:
+```{r}
+plot(df$ranking, df$attack)
+plot(df$ranking, df$defence)
+plot(df$ranking, df$difference)
+```
+
+
+From the plots, there seems to be a linear relationship between both the random effects and the simulated ranking. The linear relationship is clearly visible when we plot the difference against the ranking.
 
 
 
