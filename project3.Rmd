@@ -161,13 +161,13 @@ An interesting observation is that when the home field advantage is present, the
 
 # d)
 
-We want to test if the two random effects in the model are significant. Since $\gamma_a \sim N(0, \tau^2_a)$ and $\gamma_d \sim N(0, \tau^2_d)$, this is equivalent to testing whether the variance of each random effect is positive. The hypothesis test for determining if the effect of attacking is significant can be formulated as
+We want to test if the two random effects in the model are significant. Since $\gamma_a \sim \mathcal{N}(0, \tau^2_a)$ and $\gamma_d \sim \mathcal{N}(0, \tau^2_d)$, this is equivalent to testing whether the variance of each random effect is positive. The hypothesis test for determining if the effect of attacking is significant can be formulated as
 $$
-  \text{H}_0 : \tau^2_a = 0 \quad \text{vs} \quad \text{H}_1 : \tau^2_a > 0,
+  H_0 : \tau^2_a = 0 \quad \text{vs.} \quad H_1 : \tau^2_a > 0,
 $$
 and a similar test can be constructed for the effect of defending.
 
-This can be carried out using a likelihood-ratio test. The test statistic is $\lambda_{LR} := -2(l_0-l_1)$, where $l_0$ and $l_1$ are the log-likelihoods of the two models. We cannot apply Wilks' theorem directly here, as standard asymptotic theory is violated. The reason for this is that there is a 50% chance that under H$_1$, the maximum likelihood estimator $\hat \tau^2_a$ falls on the boundary of the parameter space. This is due to the expected value of the score function $s(\tau^2_a) := \frac{\partial l_1}{\partial \tau_a^2}$ evaluated at zero is zero, $E\left[ s(0) \right] = 0$, so whenever the slope of $s(0)$ is negative, the maximum likelihood estimator returns zero. This results in a mixture of two distributions
+This can be carried out using a likelihood-ratio test. The test statistic is $\lambda_{LR} := -2(l_0-l_1)$, where $l_0$ and $l_1$ are the log-likelihoods of the two models. We cannot apply Wilks' theorem directly here, as standard asymptotic theory is violated. The reason for this is that there is a 50% chance that under $H_1$, the maximum likelihood estimator $\hat \tau^2_a$ falls on the boundary of the parameter space. This is due to the expected value of the score function $s(\tau^2_a) := \frac{\partial l_1}{\partial \tau_a^2}$ evaluated at zero is zero, $\mathrm{E}\left[ s(0) \right] = 0$, implying that whenever the slope of $s(0)$ is negative, the maximum likelihood estimator is zero. This results in a mixture of two distributions
 $$
   \lambda_{RT} \sim \frac12\chi^2_0 : \frac12 \chi^2_1
 $$
