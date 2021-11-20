@@ -34,7 +34,7 @@ where $\beta_0$ is the intercept and $\beta_h$ is the effect of playing home. Th
 $$
 \gamma_{i}^a \overset{iid}\sim \mathcal{N}(0, \tau_{\text{a}}) \quad \text{and} \quad \gamma_{j}^d \overset{iid}\sim \mathcal{N}(0, \tau_{d}).
 $$
-We also assume that $\gamma_i^a$ and $\gamma_j^d$ are independent $\forall i,j$.
+We also assume that $\gamma_i^a$ and $\gamma_j^d$ are independent $\forall i,j$. The model parameters are computed with a restricted maximum likelihood approach (REML).
 
 ## Distributional Assumption on Response
 
@@ -45,7 +45,7 @@ Assuming that the response follows a Poisson distribution amounts to making the 
 \item Two (or more) goals cannot be scored at exactly the same instance.
 \end{enumerate}
 
-The last two assumptions seem very reasonable; two goals can obviously not occur at the same time, and more time gives more oppurtunities for goal scoring. The first one, however, is more questionable. For example, a team might which has just conceded a goal close to the end of the game might play more aggressively to salvage a draw, hence increasing the likelihood of more goals being scored. Despite this, the Poisson distribution seems like a reasonable choice to model this process. \textcolor{red}{Trenger flere antagelser? Diskutere REML?}
+The last two assumptions seem very reasonable; two goals can obviously not occur at the same time, and more time gives more oppurtunities for goal scoring. The first one, however, is more questionable. For example, a team might which has just conceded a goal close to the end of the game might play more aggressively to salvage a draw, hence increasing the likelihood of more goals being scored. Despite this, the Poisson distribution seems like a reasonable choice to model this process.
 
 
 # b)
