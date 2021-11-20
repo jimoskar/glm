@@ -167,7 +167,7 @@ $$
 $$
 and a similar test can be constructed for the effect of defending.
 
-This can be carried out using a likelihood-ratio test. The test statistic is $\lambda_{LR} := -2(l_0-l_1)$, where $l_0$ and $l_1$ are the log-likelihoods of the two models. We cannot apply Wilks' theorem directly here, as standard asymptotic theory is violated. The reason for this is that there is a 50% chance that under $H_1$, the maximum likelihood estimator $\hat \tau^2_a$ falls on the boundary of the parameter space. This is due to the expected value of the score function $s(\tau^2_a) := \frac{\partial l_1}{\partial \tau_a^2}$ evaluated at zero is zero, $\mathrm{E}\left[ s(0) \right] = 0$, implying that whenever the slope of $s(0)$ is negative, the maximum likelihood estimator is zero. This results in a mixture of two distributions
+This can be carried out using a likelihood-ratio test. The test statistic is $\lambda_{LR} := -2(l_0-l_1)$, where $l_0$ and $l_1$ are the log-likelihoods of the under $H_0$ and $H_1$, respectively. We cannot apply Wilks' theorem directly here, as standard asymptotic theory is violated. The reason for this is that there is a 50% chance that under $H_1$ \textcolor{red}{H0?}, the maximum likelihood estimator $\hat \tau^2_a$ falls on the boundary of the parameter space. This is due to the expected value of the score function $s(\tau^2_a) := \frac{\partial l_1}{\partial \tau_a^2}$ evaluated at zero is zero, $\mathrm{E}\left[ s(0) \right] = 0$, implying that whenever the slope of $s(0)$ is negative, the maximum likelihood estimator is zero. This results in a mixture of two distributions
 $$
   \lambda_{RT} \sim \frac12\chi^2_0 : \frac12 \chi^2_1
 $$
@@ -209,9 +209,9 @@ The p-value suggest that the effect of defence is not significant. The test stat
 
 Our hypothesis can be formulated as
 $$
-  \text{H}_0 : \beta_h = 0 \quad \text{vs} \quad \text{H}_1 : \beta_h \ne 0,
+  H_0 : \beta_h = 0 \quad \text{vs.} \quad H_1 : \beta_h \ne 0,
 $$
-where under H$_1$, the home field advantage could be either negative or positive.
+where under $H_1$, the home field advantage could be either negative or positive.
 
 The restricted maximum likelihood (REML) is often preferred when fitting generalized mixed models as the calculations are cheaper than using normal maximum likelihood estimation. However, this is not possible here, as REML uses a likelihood function on a transformed set of data, so that nuisance parameters have no effect. Under H$_0$, this is simply the intercept $\beta_0$. But under H$_1$, we also have the parameter $\beta_h$ for the home field advantage. This means that the two models lead to different means using REML, making the likelihood non-comparable. Setting REML = FALSE avoids this issue and fits the models using normal maximum likelihoods.
 
