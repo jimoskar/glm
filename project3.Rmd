@@ -49,7 +49,7 @@ The last two assumptions seem very reasonable; two goals can obviously not occur
 
 
 # b)
-
+We print out the summary and random effects:
 ```{r}
 sum <- summary(mod)
 sum
@@ -60,21 +60,30 @@ rf <- ranef(mod)
 rf
 ```
 
-The effect of playing home is positive and statistically significant. According to the output, the team playing home scores $\exp(0.40716)=$ `r exp(0.40716)` more goals on average, i.e. nearly 50% more goals on average. This seems reasonable from an intuitive perspective. Looking at the estimated random effects, we can e.g. consider $\gamma_\text{Rosenborg}^{\text{defence}} \approx -0.153$. This is the lowest value among all teams, which indicates that Rosenborg is the best defending team. To check this, we calculate the average number of goals conceded by every team:
+The effect of playing home is positive and statistically significant. According to the output, the team playing home scores $\exp(0.40716)=$ `r exp(0.40716)` more goals on average, i.e. about 50% more goals on average. This seems reasonable from an intuitive perspective. Looking at the estimated random effects, we can e.g. consider $\gamma_\text{Rosenborg}^{d} \approx -0.153$. This is the lowest value among all teams, which indicates that Rosenborg is the best defending team. To check this, we calculate the average number of goals conceded per match by each team:
 ```{r}
 no.NA = long[is.na(long$goals) == 0, c("defence", "goals")]
 agg = aggregate(no.NA$goals, by = list(no.NA$defence), FUN = mean)
 colnames(agg) <- c("Team", "Avg. # of conceded goals")
-knitr::kable(agg)
+sorted <- agg[order(agg[,2]), ]
+knitr::kable(sorted)
 ```
-As expected, Rosenborg has the lowest average number of conceded goals.
+As expected, Rosenborg has the lowest average number of conceded goals. Brann comes second, which is also reflected in their defence strength. We do the same analysis with respect to the average number of goals scored in each game:
+```{r}
+no.NA = long[is.na(long$goals) == 0, c("attack", "goals")]
+agg = aggregate(no.NA$goals, by = list(no.NA$attack), FUN = mean)
+colnames(agg) <- c("Team", "Avg. # of goals scored")
+sorted <- agg[order(-agg[,2]), ]
+knitr::kable(sorted)
+```
+We observe that Molde scores the most goals on average, which is reflected in their attacking strength etc. To conclude, the parameter esitmates seem reasonable.
 
 From the model assumptions, namely $\gamma_{i}^a \sim \mathcal{N}(0, \tau_{\text{a}})$ and $\gamma_{j}^d \sim \mathcal{N}(0, \tau_{d})$, the average attack strength and the average defense strength are equal to 0. An estimate of the expected number of goals which the average attacking team scores is thus given as
 
 $$
 \exp(\beta_0 + \beta_h) \approx \text{`r exp(beta.0 + beta.h)`}.
 $$
-Since the the number of goals scored is assumed to follow a Poisson distribution, an estimate of the variance is given by the same value. We now consider the the situation when the average defense team is attacking (here we assume that they also have average attck strength and that the average attack team has average defense) \textcolor{red}{spør om dette!!}. Then, an estimate of the number of goals scored is given as
+Since the the number of goals scored is assumed to follow a Poisson distribution, an estimate of the variance is given by the same value. We now consider the the situation when the average defense team is attacking (here we assume that they also have average attack strength and that the average attack team has average defense). Then, an estimate of the number of goals scored is given as
 
 $$
 \exp(\beta_0) \approx \text{`r exp(beta.0)`}.
