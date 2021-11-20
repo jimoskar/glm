@@ -203,7 +203,7 @@ p.value <- 0.5 * pchisq(LRT.no_defence, df=0, lower.tail = FALSE) +
            0.5 * pchisq(LRT.no_defence, df=1, lower.tail = FALSE)
 p.value
 ```
-The p-value suggest that the effect of defence is not significant. The test statistic has value has value `r LRT.no_defence`, which is again lower than the critical value.
+The $p$-value suggest that the effect of defence is not significant. The test statistic has value has value `r LRT.no_defence`, which is again lower than the critical value.
 
 ## Testing the effect of home field advantage
 
