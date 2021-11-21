@@ -217,7 +217,7 @@ $$
 $$
 where under $H_1$, the home field advantage could be either negative or positive.
 
-The restricted maximum likelihood (REML) is often preferred when fitting generalized mixed models as the calculations are cheaper than using normal maximum likelihood estimation. However, this is not possible here, as REML uses a likelihood function on a transformed set of data, so that nuisance parameters have no effect. Under H$_0$, this is simply the intercept $\beta_0$. But under H$_1$, we also have the parameter $\beta_h$ for the home field advantage. This means that the two models lead to different means using REML, making the likelihood non-comparable. Setting REML = FALSE avoids this issue and fits the models using normal maximum likelihoods.
+The restricted maximum likelihood (REML) is often preferred when fitting generalized mixed models as the calculations are cheaper \textcolor{red}{er det?} than using normal maximum likelihood estimation. However, this is not possible here, as REML uses a likelihood function on a transformed set of data, so that nuisance parameters have no effect. Under $H_0$, this is simply the intercept $\beta_0$. But under $H_1$, we also have the parameter $\beta_h$ for the home field advantage. This means that the two models lead to different means using REML, making the likelihood non-comparable. Setting `REML = FALSE` avoids this issue and fits the models using normal maximum likelihoods.
 
 
 ```{r}
