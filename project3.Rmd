@@ -167,13 +167,13 @@ $$
 $$
 and a similar test can be constructed for the effect of defending.
 
-This can be carried out using a likelihood-ratio test. The test statistic is $\lambda_{LR} := -2(l_0-l_1)$, where $l_0$ and $l_1$ are the log-likelihoods of the under $H_0$ and $H_1$, respectively. We cannot apply Wilks' theorem directly here, as standard asymptotic theory is violated. The reason for this is that there is a 50% chance that under $H_1$ \textcolor{red}{H0?}, the maximum likelihood estimator $\hat \tau^2_a$ falls on the boundary of the parameter space. This is due to the expected value of the score function $s(\tau^2_a) := \frac{\partial l_1}{\partial \tau_a^2}$ evaluated at zero is zero, $\mathrm{E}\left[ s(0) \right] = 0$, implying that whenever the slope of $s(0)$ is negative, the maximum likelihood estimator is zero. This results in a mixture of two distributions
+This can be carried out using a likelihood-ratio test. The test statistic is $\lambda_{LRT} := -2(l_0-l_1)$, where $l_0$ and $l_1$ are the log-likelihoods of the under $H_0$ and $H_1$, respectively. We cannot apply Wilks' theorem directly here, as standard asymptotic theory is violated. The reason for this is that there is a 50% chance that under $H_1$ \textcolor{red}{H0?}, the maximum likelihood estimator $\hat \tau^2_a$ falls on the boundary of the parameter space. This is due to the expected value of the score function $s(\tau^2_a) := \frac{\partial l_1}{\partial \tau_a^2}$ evaluated at zero is zero, $\mathrm{E}\left[ s(0) \right] = 0$, implying that whenever the slope of $s(0)$ is negative, the maximum likelihood estimator is zero. This results in a mixture of two distributions
 $$
-  \lambda_{RT} \sim \frac12\chi^2_0 : \frac12 \chi^2_1
+  \lambda_{LRT} \sim \frac12\chi^2_0 : \frac12 \chi^2_1
 $$
 where $\chi^2_0$ is simply the point mass distribution located at zero. The critical value $C$ of the likelihood-ratio test is given as
 $$
-  P(\lambda_{RT} \ge C) = \frac12 P(\chi^2_0 \ge C) + \frac12 P(\chi^2_1 \ge C) = \alpha.
+  P(\lambda_{LRT} \ge C) = \frac12 P(\chi^2_0 \ge C) + \frac12 P(\chi^2_1 \ge C) = \alpha.
 $$
 Since $C > 0$ for $\alpha < \frac12$ the first term vanishes, so $C$ is the upper $2\alpha$ quantile of a chi-squared distribution with one degree of freedom. Using $\alpha = 0.05$ we get the critical value
 ```{r}
@@ -191,10 +191,14 @@ p.value <- 0.5 * pchisq(LRT.no_attack, df=0, lower.tail = FALSE) +
            0.5 * pchisq(LRT.no_attack, df=1, lower.tail = FALSE)
 p.value
 ```
-The p-value suggest that we can not reject H$_0$, meaning that the effect of attack is not significant. The test statistic has value `r LRT.no_attack`, which is lower than the critical value.
+The $p$-value suggest that we can not reject $H_0$, meaning that the effect of attack is not significant. The test statistic has value `r LRT.no_attack`, which is lower than the critical value.
 
 ## Testing significance of effect of defence
-
+We now consider
+$$
+  H_0 : \tau^2_d = 0 \quad \text{vs.} \quad H_1 : \tau^2_d > 0,
+$$
+which results in a similar test:
 ```{r}
 mod.no_defence <- glmmTMB(goals ~ home + (1|attack), poisson, data=long, REML=TRUE)
 LRT.no_defence <- -2*as.numeric(logLik(mod.no_defence) - logLik(mod))
@@ -203,7 +207,7 @@ p.value <- 0.5 * pchisq(LRT.no_defence, df=0, lower.tail = FALSE) +
            0.5 * pchisq(LRT.no_defence, df=1, lower.tail = FALSE)
 p.value
 ```
-The $p$-value suggest that the effect of defence is not significant. The test statistic has value has value `r LRT.no_defence`, which is again lower than the critical value.
+The $p$-value suggest that the effect of defence is not significant. The test statistic has value `r LRT.no_defence`, which is again lower than the critical value.
 
 ## Testing the effect of home field advantage
 
@@ -225,7 +229,7 @@ LRT.no_home <- -2*as.numeric(logLik(mod.no_home) - logLik(mod.ML))
 p.value <- pchisq(LRT.no_home, df=1, lower.tail = FALSE)
 p.value
 ```
-The low p-value is smaller than the significance level, indicating that the effect of home field is significant.
+The low $p$-value is smaller than the significance level, indicating that the effect of home field is significant.
 
 
 # e)
