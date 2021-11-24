@@ -315,7 +315,7 @@ library(kableExtra)
 knitr::kable(output) %>% kableExtra::landscape() 
 ```
 
-TODO: Add some comment here.
+The results of the simulations are summarized on the previous page, where we have included the ranking probabilities of each team and the mean ranking. Sorting the teams by their average ranking in ascending order, we see that Rosenborg has the lowest mean ranking, as is expected from the rankings obtained in e).
 
 # g)
 
