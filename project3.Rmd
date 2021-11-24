@@ -12,7 +12,8 @@ knitr::opts_chunk$set(echo = TRUE)
 ```
 
 ```{r}
-long <- read.csv("https://www.math.ntnu.no/emner/TMA4315/2020h/eliteserie.csv", colClasses = c("factor","factor","factor","numeric"))
+long <- read.csv("https://www.math.ntnu.no/emner/TMA4315/2020h/eliteserie.csv", 
+                 colClasses = c("factor","factor","factor","numeric"))
 head(long)
 ```
 # a)
@@ -32,7 +33,7 @@ $$
 where $\beta_0$ is the intercept and $\beta_h$ is the effect of playing home. The random effects are independent and identically distributed, such that
 
 $$
-\gamma_{i}^a \overset{iid}\sim \mathcal{N}(0, \tau_{\text{a}}) \quad \text{and} \quad \gamma_{j}^d \overset{iid}\sim \mathcal{N}(0, \tau_{d}).
+\gamma_{i}^a \overset{iid}\sim \mathcal{N}(0, \tau_{a}^2) \quad \text{and} \quad \gamma_{j}^d \overset{iid}\sim \mathcal{N}(0, \tau_{d}^2).
 $$
 We also assume that $\gamma_i^a$ and $\gamma_j^d$ are independent $\forall i,j$. The model parameters are computed with a restricted maximum likelihood approach (REML).
 
@@ -45,7 +46,7 @@ Assuming that the response follows a Poisson distribution amounts to making the 
 \item Two (or more) goals cannot be scored at exactly the same instance.
 \end{enumerate}
 
-The last two assumptions seem very reasonable; two goals can obviously not occur at the same time, and more time gives more oppurtunities for goal scoring. The first one, however, is more questionable. For example, a team might which has just conceded a goal close to the end of the game might play more aggressively to salvage a draw, hence increasing the likelihood of more goals being scored. Despite this, the Poisson distribution seems like a reasonable choice to model this process.
+The last two assumptions seem very reasonable; two goals can obviously not occur at the same time, and more time gives more opportunities for goal scoring. The first one, however, is more questionable. For example, a team which has just conceded a goal close to the end of the game might play more aggressively to salvage a draw, hence increasing the likelihood of more goals being scored. Despite this, the Poisson distribution seems like a reasonable choice to model this process.
 
 
 # b)
@@ -62,7 +63,7 @@ rf
 
 The effect of playing home is positive and statistically significant. According to the output, the team playing home scores $\exp(0.40716)=$ `r exp(0.40716)` more goals on average, i.e. about 50% more goals on average. This seems reasonable from an intuitive perspective. Looking at the estimated random effects, we can e.g. consider $\gamma_\text{Rosenborg}^{d} \approx -0.153$. This is the lowest value among all teams, which indicates that Rosenborg is the best defending team. To check this, we calculate the average number of goals conceded per match by each team:
 ```{r}
-no.NA = long[is.na(long$goals) == 0, c("defence", "goals")]
+no.NA = long[!is.na(long$goals), c("defence", "goals")]
 agg = aggregate(no.NA$goals, by = list(no.NA$defence), FUN = mean)
 colnames(agg) <- c("Team", "Avg. # of conceded goals")
 sorted <- agg[order(agg[,2]), ]
@@ -70,7 +71,7 @@ knitr::kable(sorted)
 ```
 As expected, Rosenborg has the lowest average number of conceded goals. Brann comes second, which is also reflected in their defence strength. We do the same analysis with respect to the average number of goals scored in each game:
 ```{r}
-no.NA = long[is.na(long$goals) == 0, c("attack", "goals")]
+no.NA = long[!is.na(long$goals), c("attack", "goals")]
 agg = aggregate(no.NA$goals, by = list(no.NA$attack), FUN = mean)
 colnames(agg) <- c("Team", "Avg. # of goals scored")
 sorted <- agg[order(-agg[,2]), ]
@@ -78,7 +79,7 @@ knitr::kable(sorted)
 ```
 We observe that Molde scores the most goals on average, which is reflected in their attacking strength etc. To conclude, the parameter esitmates seem reasonable.
 
-From the model assumptions, namely $\gamma_{i}^a \sim \mathcal{N}(0, \tau_{\text{a}})$ and $\gamma_{j}^d \sim \mathcal{N}(0, \tau_{d})$, the average attack strength and the average defense strength are equal to 0. An estimate of the expected number of goals which the average attacking team scores is thus given as
+From the model assumptions, namely $\gamma_{i}^a \sim \mathcal{N}(0, \tau_{a}^2)$ and $\gamma_{j}^d \sim \mathcal{N}(0, \tau_{d}^2)$, the average attack strength and the average defense strength are equal to 0. An estimate of the expected number of goals which the average attacking team scores is thus given as
 
 $$
 \exp(\beta_0 + \beta_h) \approx \text{`r exp(beta.0 + beta.h)`}.
@@ -92,14 +93,14 @@ Again, since we consider a Poisson-distributed variable, an estimate of the vari
 
 # c)
 
-The expected value and variance of goals scored by two randomly selected teams can be found by the laws of total expectation and total variance conditioned on the random effect given by the two teams. For this, we use that the distribution $\text{Lognormal}(0,\tau^2)$ has mean $\exp(\tau^2/2)$ and variance $(\exp(\tau^2)-1)\exp(\tau^2)$.
+The expected value and variance of goals scored by two randomly selected teams can be found by the laws of total expectation and total variance conditioned on the random effects given by the two teams. For this, we use that the distribution $\text{Lognormal}(0,\tau^2)$ has mean $\exp(\tau^2/2)$ and variance $(\exp(\tau^2)-1)\exp(\tau^2)$.
 
 The law of total expectation gives
 $$
 \begin{split}
-  \text{E}[y_{ijk}] &= \text{E}\left[\text{E}\left[y_{ijk} \mid \gamma_{ai}, \gamma_{dj}\right]\right]\\
-  &= \text{E}\left[ \text{exp}\left(\beta_0 + \beta_h x_{ijk} + \gamma_{ai} + \gamma_{dj}\right) \right]\\
-  &= \text{exp}\left( \beta_0 + \beta_h x_{ijk}\right) \text{E}\left[\exp\left(\gamma_{ai} + \gamma_{dj}\right)\right] \\
+  \text{E}[y_{ijk}] &= \text{E}\left[\text{E}\left[y_{ijk} \mid \gamma_{i}^a, \gamma_{j}^d\right]\right]\\
+  &= \text{E}\left[ \text{exp}\left(\beta_0 + \beta_h x_{ijk} + \gamma_{i}^a + \gamma_{j}^d\right) \right]\\
+  &= \text{exp}\left( \beta_0 + \beta_h x_{ijk}\right) \text{E}\left[\exp\left(\gamma_{i}^a + \gamma_{j}^d\right)\right] \\
   &= \text{exp}\left( \beta_0 + \beta_h x_{ijk}\right) \text{exp}\left( \frac{\tau_a^2+\tau_d^2}{2}\right). \\
 \end{split}
 $$
@@ -107,17 +108,17 @@ $$
 The law of total variance gives
 $$
 \begin{split}
-  \text{Var}[y_{ijk}] &= \text{E}\left[\text{Var}\left[y_{ijk} \mid \gamma_{ai}, \gamma_{dj}\right]\right] + \text{Var}\left[\text{E}\left[y_{ijk} \mid \gamma_{ai}, \gamma_{dj}\right]\right]\\
-  &= \text{E}\left[ \text{exp}\left(\beta_0 + \beta_h x_{ijk} + \gamma_{ai} + \gamma_{dj}\right) \right] + \text{Var}\left[ \text{exp}\left(\beta_0 + \beta_h x_{ijk} + \gamma_{ai} + \gamma_{dj}\right) \right]\\
-  &= \text{E}[y_{ijk}]  + \text{exp}\left( 2(\beta_0 + \beta_h x_{ijk}\right)) \text{Var}\left[ \text{exp}\left(\gamma_{ai} + \gamma_{dj}\right) \right]\\
+  \text{Var}[y_{ijk}] &= \text{E}\left[\text{Var}\left[y_{ijk} \mid \gamma_{i}^a, \gamma_{j}^d\right]\right] + \text{Var}\left[\text{E}\left[y_{ijk} \mid \gamma_{i}^a, \gamma_{j}^d\right]\right]\\
+  &= \text{E}\left[ \text{exp}\left(\beta_0 + \beta_h x_{ijk} + \gamma_{i}^a + \gamma_{j}^d\right) \right] + \text{Var}\left[ \text{exp}\left(\beta_0 + \beta_h x_{ijk} + \gamma_{i}^a + \gamma_{j}^d\right) \right]\\
+  &= \text{E}[y_{ijk}]  + \text{exp}\left( 2(\beta_0 + \beta_h x_{ijk}\right)) \text{Var}\left[ \text{exp}\left(\gamma_{i}^a + \gamma_{j}^d\right) \right]\\
   &= \text{exp}\left( \beta_0 + \beta_h x_{ijk}\right) \text{exp}\left( \frac{\tau_a^2+\tau_d^2}{2}\right) + \text{exp}\left( 2\left(\beta_0 + \beta_h x_{ijk}\right)\right) \left( \text{exp}\left( \tau_a^2+\tau_d^2\right) - 1 \right) \text{exp}\left( \tau_a^2+\tau_d^2\right).\\
 \end{split}
 $$
 Note that the total marginal variance consists of two terms, given as 
 $$
-  \text{Var}[y_{ijk}] = \underbrace{\text{E}\left[\text{Var}\left[y_{ijk} \mid \gamma_{ai}, \gamma_{dj}\right]\right]}_{\text{Variance of the game}} + \underbrace{\text{Var}\left[\text{E}\left[y_{ijk} \mid \gamma_{ai}, \gamma_{dj}\right]\right]}_{\text{Varaince of team strengths}}.
+  \text{Var}[y_{ijk}] = \underbrace{\text{E}\left[\text{Var}\left[y_{ijk} \mid \gamma_{i}^a, \gamma_{j}^d\right]\right]}_{\text{Variance of the game}} + \underbrace{\text{Var}\left[\text{E}\left[y_{ijk} \mid \gamma_{i}^a, \gamma_{j}^d\right]\right]}_{\text{Varaince of team strengths}}.
 $$
-The first term is the expected variance of goals, which is a measure of the inherent randomness of the football game given the two teams. The second term is the variance of the expected goals, which is attributed to the variance in the strength of the two teams, since the expected goals are constant given two teams, so the randomness comes from the difference in strengths among the teams. We now calculate the proportion of variance explained by the two terms without and with home filed advantage.
+The first term is the expected variance of goals, which is a measure of the inherent randomness of the football game given the two teams. The second term is the variance of the expected goals, which is attributed to the variance in the strength of the two teams, since the expected goals are constant given two teams, so the randomness comes from the difference in strengths among the teams. We now calculate the proportion of variance explained by the two terms without and with home field advantage.
 
 
 ## Estimating the proportions with no home field advantage:
@@ -161,13 +162,13 @@ An interesting observation is that when the home field advantage is present, the
 
 # d)
 
-We want to test if the two random effects in the model are significant. Since $\gamma_a \sim \mathcal{N}(0, \tau^2_a)$ and $\gamma_d \sim \mathcal{N}(0, \tau^2_d)$, this is equivalent to testing whether the variance of each random effect is positive. The hypothesis test for determining if the effect of attacking is significant can be formulated as
+We want to test if the two random effects in the model are significant. Since $\gamma^a \sim \mathcal{N}(0, \tau^2_a)$ and $\gamma^d \sim \mathcal{N}(0, \tau^2_d)$, this is equivalent to testing whether the variance of each random effect is positive. The hypothesis test for determining if the effect of attacking is significant can be formulated as
 $$
   H_0 : \tau^2_a = 0 \quad \text{vs.} \quad H_1 : \tau^2_a > 0,
 $$
 and a similar test can be constructed for the effect of defending.
 
-This can be carried out using a likelihood-ratio test. The test statistic is $\lambda_{LRT} := -2(l_0-l_1)$, where $l_0$ and $l_1$ are the log-likelihoods of the under $H_0$ and $H_1$, respectively. We cannot apply Wilks' theorem directly here, as standard asymptotic theory is violated. The reason for this is that there is a 50% chance that under $H_1$ \textcolor{red}{H0?}, the maximum likelihood estimator $\hat \tau^2_a$ falls on the boundary of the parameter space. This is due to the expected value of the score function $s(\tau^2_a) := \frac{\partial l_1}{\partial \tau_a^2}$ evaluated at zero is zero, $\mathrm{E}\left[ s(0) \right] = 0$, implying that whenever the slope of $s(0)$ is negative, the maximum likelihood estimator is zero. This results in a mixture of two distributions
+This can be carried out using a likelihood-ratio test. The test statistic is $\lambda_{LRT} := -2(l_0-l_1)$, where $l_0$ and $l_1$ are the log-likelihoods of the under $H_0$ and $H_1$, respectively. We cannot apply Wilks' theorem directly here, as standard asymptotic theory is violated. The reason for this is that under $H_0$, there is a 50% chance that the MLE of $\tau_a$ under $H_1$ falls on the boundary, such that the corresponding LRT statistic takes a value of 0. This is due to the expected value of the score function $s(\tau^2_a) := \frac{\partial l_1}{\partial \tau_a^2}$ evaluated at zero is zero, $\mathrm{E}\left[ s(0) \right] = 0$, implying that whenever the slope of $s(0)$ is negative, the maximum likelihood estimator is zero. This results in a mixture of two distributions
 $$
   \lambda_{LRT} \sim \frac12\chi^2_0 : \frac12 \chi^2_1
 $$
@@ -217,7 +218,7 @@ $$
 $$
 where under $H_1$, the home field advantage could be either negative or positive.
 
-The restricted maximum likelihood (REML) is often preferred when fitting generalized mixed models as the calculations are cheaper \textcolor{red}{er det?} than using normal maximum likelihood estimation. However, this is not possible here, as REML uses a likelihood function on a transformed set of data, so that nuisance parameters have no effect. Under $H_0$, this is simply the intercept $\beta_0$. But under $H_1$, we also have the parameter $\beta_h$ for the home field advantage. This means that the two models lead to different means using REML, making the likelihood non-comparable. Setting `REML = FALSE` avoids this issue and fits the models using normal maximum likelihoods.
+The restricted maximum likelihood (REML) is often preferred when fitting generalized mixed models as they often produce less biased estimators\ \textcolor{red}{??} than using normal maximum likelihood estimation. However, this is not possible here, as REML uses a likelihood function on a transformed set of data, so that nuisance parameters have no effect. Under $H_0$, this is simply the intercept $\beta_0$. But under $H_1$, we also have the parameter $\beta_h$ for the home field advantage. This means that the two models lead to different means using REML, making the likelihoods non-comparable. Setting `REML = FALSE` avoids this issue and fits the models using normal maximum likelihoods.
 
 
 ```{r}
@@ -278,7 +279,7 @@ knitr::kable(stats[order(stats$rank),])
 
 # f)
 
-Simulating 1000 complete seasons using the predicted mean $\hat \mu$ from the model created in a).
+We simulate 1000 realization of the whole series by using the predicted mean $\hat \mu := \hat \lambda$ from the model created in a).
 
 ```{r, cache=TRUE}
 set.seed(0)
@@ -299,11 +300,7 @@ for(i in 1:1000){
   rank.matrix[i,] <- ranking(long)$rank
 }
 long$goals <- temp
-```
 
-
-
-```{r}
 # probabilities of each observation
 probabilities <- apply(rank.matrix, 2, table)/1000
 
